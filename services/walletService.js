@@ -1,6 +1,7 @@
 const { generateWallet, encrypt } = require("../utils/cryptoUtils.js");
 const User = require("../database/models/users/User.js");
 const Wallet = require("../database/models/wallets/Wallets.js");
+require('dotenv').config()
 
 const createWalletForUser = async (tgId, tgName, tgUserName) => {
   let user = await User.findOne({ where: { tgId } });
@@ -32,7 +33,6 @@ const createWalletForUser = async (tgId, tgName, tgUserName) => {
 
   const { address, privateKey } = generateWallet();
   const {encryptedPrivateKey, iv} = encrypt(privateKey)
-
   const wallet = await Wallet.create({
     address,
     privateKey: encryptedPrivateKey,
