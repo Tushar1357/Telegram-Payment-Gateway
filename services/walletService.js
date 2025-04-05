@@ -1,4 +1,4 @@
-const { generateWallet } = require("../utils/cryptoUtils.js");
+const { generateWallet, encrypt } = require("../utils/cryptoUtils.js");
 const User = require("../database/models/users/User.js");
 const Wallet = require("../database/models/wallets/Wallets.js");
 
@@ -31,10 +31,12 @@ const createWalletForUser = async (tgId, tgName, tgUserName) => {
   }
 
   const { address, privateKey } = generateWallet();
+  const {encryptedPrivateKey, iv} = encrypt(privateKey)
 
   const wallet = await Wallet.create({
     address,
-    privateKey,
+    privateKey: encryptedPrivateKey,
+    iv,
     status: "unpaid",
     userId: user.id,
   });
