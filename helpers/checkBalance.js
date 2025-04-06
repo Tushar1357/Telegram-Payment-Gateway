@@ -3,13 +3,12 @@ const Wallets = require("../database/models/wallets/Wallets.js");
 const User = require("../database/models/users/User.js");
 const updateSubscription = require("../services/subscriptionService.js");
 require("dotenv").config();
-const ERC20_ABI = require("../configs/abi.js")
-
+const ERC20_ABI = require("../configs/abi.js");
 
 const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
 
 const TIMEOUT = 30 * 60 * 1000;
-const REMINDER_TIME = 5 * 60 * 1000
+const REMINDER_TIME = 5 * 60 * 1000;
 
 const MIN_AMOUNT = 0.01;
 
@@ -23,7 +22,7 @@ const checkBalance = async (bot) => {
       },
     });
     const usdtContract = new w3.eth.Contract(ERC20_ABI, USDT_ADDRESS);
-    
+
     for (const wallet of walletDetail) {
       const user = await User.findOne({
         where: {
@@ -36,9 +35,12 @@ const checkBalance = async (bot) => {
         continue;
       }
       const createdAt = new Date(wallet.createdAt).getTime();
-      const time = (createdAt + TIMEOUT);
+      const time = createdAt + TIMEOUT;
 
-      if (time - Date.now() < REMINDER_TIME && time - Date.now() > REMINDER_TIME - 15 * 1000){
+      if (
+        time - Date.now() < REMINDER_TIME &&
+        time - Date.now() > REMINDER_TIME - 15 * 1000
+      ) {
         await bot.sendMessage(
           user.tgId,
           "⏰ Reminder: You have 5 minutes left to complete your payment of 0.01 USDT (BEP-20). Please complete it soon or the address will expire."
@@ -46,7 +48,7 @@ const checkBalance = async (bot) => {
       }
       if (time < Date.now()) {
         await Wallets.update(
-          { status: 'expired' },
+          { status: "expired" },
           { where: { id: wallet.id } }
         );
         bot.sendMessage(
@@ -55,7 +57,9 @@ const checkBalance = async (bot) => {
         );
         continue;
       }
-      const tokenBalance = await usdtContract.methods.balanceOf(wallet.address).call();
+      const tokenBalance = await usdtContract.methods
+        .balanceOf(wallet.address)
+        .call();
       const tokenBalanceFormatted = w3.utils.fromWei(tokenBalance, "ether");
 
       if (parseFloat(tokenBalanceFormatted) >= MIN_AMOUNT) {
@@ -82,12 +86,14 @@ const checkBalance = async (bot) => {
         });
         bot.sendMessage(
           user.tgId,
-          `You have successfully purhcased your subscription. Here is the telegram link to the channel.\nTelegram Link:- ${
+          `🎉 *Subscription Activated!*\n\n✅ You’ve successfully purchased your subscription.\n\n🔗 *Access the Channel:*\n[Click here to join](${
             channelLink.invite_link
-          }\n\nYour subscription will expire on ${new Date(
+          })\n\n🕒 *Subscription Valid Till:*\n${new Date(
             expirationTime
-          ).toUTCString()}`,{
-            disable_web_page_preview: true
+          ).toUTCString()}\n\nThank you for subscribing! If you face any issues, feel free to reach out to @MrBean000.`,
+          {
+            parse_mode: "Markdown",
+            disable_web_page_preview: true,
           }
         );
       }
