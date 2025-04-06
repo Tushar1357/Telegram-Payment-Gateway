@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /path/to/your/project
-            git pull origin main
+            cd /home/TG_PAYMENT_GATEWAY
+            git pull origin master
             npm install
-            pm2 restart app
+            pm2 restart 4
