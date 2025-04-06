@@ -36,6 +36,10 @@ const Wallets = sequelize.define("Wallets", {
       key: "id",
     },
   },
+  balanceSent: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+  }
 });
 
 User.hasMany(Wallets, {

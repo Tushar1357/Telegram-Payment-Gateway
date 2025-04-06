@@ -1,8 +1,12 @@
 const w3 = require("../configs/web3.js");
 const Wallets = require("../database/models/wallets/Wallets.js");
 const User = require("../database/models/users/User.js");
+const updateSubscription = require("../services/subscriptionService.js");
+require("dotenv").config();
 
 const TIMEOUT = 30 * 60 * 1000;
+
+const chatId = process.env.CHATID;
 
 const checkBalance = async (bot) => {
   try {
@@ -39,10 +43,11 @@ const checkBalance = async (bot) => {
       const balanceWei = await w3.eth.getBalance(wallet.address);
       const balanceEth = w3.utils.fromWei(balanceWei, "ether");
 
-      if (parseFloat(balanceEth) >= 0.01) {
+      if (parseFloat(balanceEth) >= 0) {
         const result = await Wallets.update(
           {
             status: "paid",
+            balanceSent: false,
           },
           {
             where: {
@@ -50,13 +55,24 @@ const checkBalance = async (bot) => {
             },
           }
         );
+        const expirationTime = await updateSubscription(user);
 
         if (!result) {
-          console.log("There was an error while updating the payment status.")
+          console.log("There was an error while updating the payment status.");
         }
+
+        const channelLink = await bot.createChatInviteLink(chatId, {
+          member_limit: 1,
+        });
         bot.sendMessage(
           user.tgId,
-          `You have successfully purhcased your subscription. Here is the telegram link to the channel.\nTelegram Link:- @MrBean000`
+          `You have successfully purhcased your subscription. Here is the telegram link to the channel.\nTelegram Link:- ${
+            channelLink.invite_link
+          }\n\nYour subscription will expire on ${new Date(
+            expirationTime
+          ).toUTCString()}`,{
+            disable_web_page_preview: true
+          }
         );
       }
     }

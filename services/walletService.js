@@ -11,6 +11,7 @@ const createWalletForUser = async (tgId, tgName, tgUserName) => {
       tgId,
       tgName,
       tgUserName,
+      subscriptionStatus: false,
     });
   }
 

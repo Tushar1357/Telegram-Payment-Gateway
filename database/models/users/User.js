@@ -1,4 +1,4 @@
-const {DataTypes, Sequelize} = require('sequelize')
+const { DataTypes, Sequelize } = require("sequelize");
 
 const sequelize = require("../../../configs/connection.js");
 
@@ -18,13 +18,25 @@ const User = sequelize.define("User", {
   },
   tgName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
   },
   tgUserName: {
     type: DataTypes.STRING,
-    allowNull: true
+    allowNull: true,
+  },
+  subscriptionStatus: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+  },
+  expiration: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  reminderSent: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
   }
 });
 
-
-module.exports = User
+module.exports = User;
