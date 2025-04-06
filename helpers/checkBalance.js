@@ -3,8 +3,14 @@ const Wallets = require("../database/models/wallets/Wallets.js");
 const User = require("../database/models/users/User.js");
 const updateSubscription = require("../services/subscriptionService.js");
 require("dotenv").config();
+const ERC20_ABI = require("../configs/abi.js")
+
+
+const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
 
 const TIMEOUT = 30 * 60 * 1000;
+
+const MIN_AMOUNT = 0;
 
 const chatId = process.env.CHATID;
 
@@ -16,6 +22,8 @@ const checkBalance = async (bot) => {
         status: "unpaid",
       },
     });
+    const usdtContract = new w3.eth.Contract(ERC20_ABI, USDT_ADDRESS);
+    
     for (const wallet of walletDetail) {
       const user = await User.findOne({
         where: {
@@ -40,10 +48,10 @@ const checkBalance = async (bot) => {
         );
         continue;
       }
-      const balanceWei = await w3.eth.getBalance(wallet.address);
-      const balanceEth = w3.utils.fromWei(balanceWei, "ether");
+      const tokenBalance = await usdtContract.methods.balanceOf(wallet.address).call();
+      const tokenBalanceFormatted = w3.utils.fromWei(tokenBalance, "ether");
 
-      if (parseFloat(balanceEth) >= 0) {
+      if (parseFloat(tokenBalanceFormatted) >= MIN_AMOUNT) {
         const result = await Wallets.update(
           {
             status: "paid",
