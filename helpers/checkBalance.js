@@ -11,7 +11,7 @@ const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
 const TIMEOUT = 30 * 60 * 1000;
 const REMINDER_TIME = 5 * 60 * 1000
 
-const MIN_AMOUNT = 10;
+const MIN_AMOUNT = 0.01;
 
 const chatId = process.env.CHATID;
 
@@ -41,7 +41,7 @@ const checkBalance = async (bot) => {
       if (time - Date.now() < REMINDER_TIME && time - Date.now() > REMINDER_TIME - 15 * 1000){
         await bot.sendMessage(
           user.tgId,
-          "⏰ Reminder: You have 5 minutes left to complete your payment of 10 USDT (BEP-20). Please complete it soon or the address will expire."
+          "⏰ Reminder: You have 5 minutes left to complete your payment of 0.01 USDT (BEP-20). Please complete it soon or the address will expire."
         );
       }
       if (time < Date.now()) {

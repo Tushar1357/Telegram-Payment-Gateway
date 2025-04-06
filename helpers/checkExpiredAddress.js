@@ -7,7 +7,7 @@ const ERC20_ABI = require("../configs/abi.js");
 
 const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
 
-const MIN_AMOUNT = 10;
+const MIN_AMOUNT = 0.01;
 
 const checkExpiredAddress = async (tgId) => {
   try {
