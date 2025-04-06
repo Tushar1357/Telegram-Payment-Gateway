@@ -1,9 +1,14 @@
 const User = require("../database/models/users/User.js");
+require('dotenv').config();
+
 
 const REMINDER_DURATION = 5 * 24 * 60 * 60 * 1000;
 
+const chatId = process.env.CHATID
+
 const subscriptionChecker = async (bot) => {
   try {
+    console.log("Checking subscription...")
     const users = await User.findAll({
       where: {
         subscriptionStatus: true,
@@ -33,6 +38,8 @@ const subscriptionChecker = async (bot) => {
             user.id
           );
         } else {
+          await bot.banChatMember(chatId, user.tgId);
+          await bot.unbanChatMember(chatId, user.tgId);
           bot.sendMessage(
             user.tgId,
             `❗️ Your subscription expired on ${new Date(

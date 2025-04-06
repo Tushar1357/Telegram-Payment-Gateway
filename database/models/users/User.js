@@ -12,7 +12,7 @@ const User = sequelize.define("User", {
     autoIncrement: false,
   },
   tgId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.BIGINT,
     allowNull: false,
     unique: true,
   },

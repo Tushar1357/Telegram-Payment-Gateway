@@ -9,8 +9,9 @@ const ERC20_ABI = require("../configs/abi.js")
 const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
 
 const TIMEOUT = 30 * 60 * 1000;
+const REMINDER_TIME = 5 * 60 * 1000
 
-const MIN_AMOUNT = 0.01;
+const MIN_AMOUNT = 10;
 
 const chatId = process.env.CHATID;
 
@@ -36,7 +37,15 @@ const checkBalance = async (bot) => {
         continue;
       }
       const createdAt = new Date(wallet.createdAt).getTime();
-      if (createdAt + TIMEOUT < Date.now()) {
+      const time = (createdAt + TIMEOUT);
+
+      if (time - Date.now() < REMINDER_TIME && time - Date.now() > REMINDER_TIME - 15 * 1000){
+        await bot.sendMessage(
+          user.tgId,
+          "⏰ Reminder: You have 5 minutes left to complete your payment of 10 USDT (BEP-20). Please complete it soon or the address will expire."
+        );
+      }
+      if (time < Date.now()) {
         await Wallets.destroy({
           where: {
             id: wallet.id,
@@ -71,6 +80,7 @@ const checkBalance = async (bot) => {
 
         const channelLink = await bot.createChatInviteLink(chatId, {
           member_limit: 1,
+          expire_date: Math.floor(Date.now() / 1000) + 60,
         });
         bot.sendMessage(
           user.tgId,

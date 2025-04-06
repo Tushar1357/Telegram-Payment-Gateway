@@ -17,6 +17,7 @@ const updateSubscription = async (user) => {
       {
         expiration: new Date(newExpirationTime),
         subscriptionStatus: true,
+        reminderSent: false
       },
       {
         where: {
