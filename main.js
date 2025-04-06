@@ -99,7 +99,7 @@ bot.on("callback_query", async (query) => {
 
       await bot.sendMessage(
         chatId,
-        `💰 USDT Amount: *10*\n\n📥 Send only *USDT (BEP-20)* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment.\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *10 USDT*.\n- Send only *BEP-20 USDT* (Binance Smart Chain). Sending from other networks may result in loss of funds.`,
+        `💰 USDT Amount: *1*\n\n📥 Send only *USDT (BEP-20)* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment.\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *1 USDT*.\n- Send only *BEP-20 USDT* (Binance Smart Chain). Sending from other networks may result in loss of funds.`,
         {
           parse_mode: "Markdown",
         }
