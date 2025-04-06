@@ -9,6 +9,7 @@ const RECEIVER_ADDRESS = process.env.RECEIVER_ADDRESS;
 const MAIN_PRIVATE_KEY = process.env.MAIN_PRIVATE_KEY;
 const MAIN_ADDRESS = w3.eth.accounts.privateKeyToAccount(MAIN_PRIVATE_KEY).address;
 const TOPUP_AMOUNT = w3.utils.toWei("0.001", "ether"); 
+const MIN_BNB_BALANCE = 0.01
 
 const balanceSend = async () => {
   try {
@@ -20,6 +21,14 @@ const balanceSend = async () => {
     console.log("Sending balance...");
 
     const usdtContract = new w3.eth.Contract(ERC20_ABI, USDT_ADDRESS);
+
+    const mainBnbBalance = await w3.eth.getBalance(MAIN_ADDRESS);
+    
+    if (parseFloat(w3.utils.fromWei(mainBnbBalance, "ether")) < MIN_BNB_BALANCE) {
+      console.error("Insufficient BNB in main wallet to top up all addresses.");
+      return;
+    }
+    
 
     for (const wallet of walletDetails) {
       const tokenBalance = await usdtContract.methods.balanceOf(wallet.address).call();
