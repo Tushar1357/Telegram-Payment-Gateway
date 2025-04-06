@@ -46,11 +46,10 @@ const checkBalance = async (bot) => {
         );
       }
       if (time < Date.now()) {
-        await Wallets.destroy({
-          where: {
-            id: wallet.id,
-          },
-        });
+        await Wallets.update(
+          { status: 'expired' },
+          { where: { id: wallet.id } }
+        );
         bot.sendMessage(
           user.tgId,
           "Your payment time is over and the wallet address has been removed. Kindly click on /subscribe to start the process."

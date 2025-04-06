@@ -1,7 +1,7 @@
 const { generateWallet, encrypt } = require("../utils/cryptoUtils.js");
 const User = require("../database/models/users/User.js");
 const Wallet = require("../database/models/wallets/Wallets.js");
-require('dotenv').config()
+require("dotenv").config();
 
 const createWalletForUser = async (tgId, tgName, tgUserName) => {
   let user = await User.findOne({ where: { tgId } });
@@ -20,7 +20,6 @@ const createWalletForUser = async (tgId, tgName, tgUserName) => {
     order: [["createdAt", "DESC"]],
   });
 
-
   if (existingWallet) {
     const walletAge = Date.now() - new Date(existingWallet.createdAt).getTime();
     const THIRTY_MINUTES = 30 * 60 * 1000;
@@ -28,12 +27,15 @@ const createWalletForUser = async (tgId, tgName, tgUserName) => {
     if (walletAge < THIRTY_MINUTES) {
       return existingWallet.address;
     } else {
-      await Wallet.destroy({ where: { id: existingWallet.id } });
+      await Wallet.update(
+        { status: "expired" },
+        { where: { id: existingWallet.id } }
+      );
     }
   }
 
   const { address, privateKey } = generateWallet();
-  const {encryptedPrivateKey, iv} = encrypt(privateKey)
+  const { encryptedPrivateKey, iv } = encrypt(privateKey);
   const wallet = await Wallet.create({
     address,
     privateKey: encryptedPrivateKey,
