@@ -7,10 +7,10 @@ const ERC20_ABI = require("../configs/abi.js");
 const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
 const RECEIVER_ADDRESS = process.env.RECEIVER_ADDRESS;
 const MAIN_PRIVATE_KEY = process.env.MAIN_PRIVATE_KEY;
-const MAIN_ADDRESS = w3.eth.accounts.privateKeyToAccount(MAIN_PRIVATE_KEY).address;
-const TOPUP_AMOUNT = w3.utils.toWei("0.0001", "ether"); 
-const MIN_BNB_BALANCE = 0.001
-
+const MAIN_ADDRESS =
+  w3.eth.accounts.privateKeyToAccount(MAIN_PRIVATE_KEY).address;
+const TOPUP_AMOUNT = w3.utils.toWei("0.0001", "ether");
+const MIN_BNB_BALANCE = 0.001;
 
 const balanceSend = async () => {
   try {
@@ -25,18 +25,24 @@ const balanceSend = async () => {
 
     const mainBnbBalance = await w3.eth.getBalance(MAIN_ADDRESS);
 
-    if (parseFloat(w3.utils.fromWei(mainBnbBalance, "ether")) < MIN_BNB_BALANCE) {
+    if (
+      parseFloat(w3.utils.fromWei(mainBnbBalance, "ether")) < MIN_BNB_BALANCE
+    ) {
       console.error("Insufficient BNB in main wallet to top up all addresses.");
       return;
     }
-    
 
     for (const wallet of walletDetails) {
-      const tokenBalance = await usdtContract.methods.balanceOf(wallet.address).call();
+      const tokenBalance = await usdtContract.methods
+        .balanceOf(wallet.address)
+        .call();
       const tokenBalanceFormatted = w3.utils.fromWei(tokenBalance, "ether");
 
       if (parseFloat(tokenBalanceFormatted) >= 0.01) {
-        const mainNonce = await w3.eth.getTransactionCount(MAIN_ADDRESS, "latest");
+        const mainNonce = await w3.eth.getTransactionCount(
+          MAIN_ADDRESS,
+          "latest"
+        );
         const gasPrice = await w3.eth.getGasPrice();
 
         const gasTx = {
@@ -48,18 +54,32 @@ const balanceSend = async () => {
           nonce: mainNonce,
         };
 
-        const signedGasTx = await w3.eth.accounts.signTransaction(gasTx, MAIN_PRIVATE_KEY);
-        const gasReceipt = await w3.eth.sendSignedTransaction(signedGasTx.rawTransaction);
+        const signedGasTx = await w3.eth.accounts.signTransaction(
+          gasTx,
+          MAIN_PRIVATE_KEY
+        );
+        const gasReceipt = await w3.eth.sendSignedTransaction(
+          signedGasTx.rawTransaction
+        );
 
-        console.log(`✅ Sent ${w3.utils.fromWei(TOPUP_AMOUNT,"ether")} BNB to ${wallet.address}. TxHash: ${gasReceipt.transactionHash}`);
+        console.log(
+          `✅ Sent ${w3.utils.fromWei(TOPUP_AMOUNT, "ether")} BNB to ${
+            wallet.address
+          }. TxHash: ${gasReceipt.transactionHash}`
+        );
 
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         const decryptedPrivKey = decrypt(wallet.privateKey, wallet.iv);
         const account = w3.eth.accounts.privateKeyToAccount(decryptedPrivKey);
-        const nonce = await w3.eth.getTransactionCount(wallet.address, "latest");
+        const nonce = await w3.eth.getTransactionCount(
+          wallet.address,
+          "latest"
+        );
 
-        const data = usdtContract.methods.transfer(RECEIVER_ADDRESS, tokenBalance).encodeABI();
+        const data = usdtContract.methods
+          .transfer(RECEIVER_ADDRESS, tokenBalance)
+          .encodeABI();
 
         const tx = {
           from: wallet.address,
@@ -71,18 +91,22 @@ const balanceSend = async () => {
         };
 
         const signedTx = await account.signTransaction(tx);
-        const receipt = await w3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        const receipt = await w3.eth.sendSignedTransaction(
+          signedTx.rawTransaction
+        );
 
         await Wallets.update(
           { balanceSent: true },
           { where: { id: wallet.id } }
         );
 
-        console.log(`✅ Sent ${tokenBalanceFormatted} USDT from ${wallet.address}. TxHash: ${receipt.transactionHash}`);
+        console.log(
+          `✅ Sent ${tokenBalanceFormatted} USDC from ${wallet.address}. TxHash: ${receipt.transactionHash}`
+        );
       }
     }
   } catch (error) {
-    console.error("Error sending USDT:", error);
+    console.error("Error sending USDC:", error);
   }
 };
 

@@ -43,7 +43,7 @@ const checkBalance = async (bot) => {
       ) {
         await bot.sendMessage(
           user.tgId,
-          "⏰ Reminder: You have 5 minutes left to complete your payment of 0.01 USDT (BEP-20). Please complete it soon or the address will expire."
+          "⏰ Reminder: You have 5 minutes left to complete your payment of 0.01 USDC (BEP-20). Please complete it soon or the address will expire."
         );
       }
       if (time < Date.now()) {
