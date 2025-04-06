@@ -25,7 +25,7 @@ const createWalletForUser = async (tgId, tgName, tgUserName) => {
     const THIRTY_MINUTES = 30 * 60 * 1000;
 
     if (walletAge < THIRTY_MINUTES) {
-      return existingWallet.address;
+      return {address: existingWallet.address, createdAt: existingWallet.createdAt};
     } else {
       await Wallet.update(
         { status: "expired" },
