@@ -53,7 +53,7 @@ const checkBalance = async (bot) => {
         );
         bot.sendMessage(
           user.tgId,
-          "Your payment time is over and the wallet address has been removed. Kindly click on /subscribe to start the process."
+          `Your payment time is over and the wallet address ${wallet.address} has been removed. Kindly click on /subscribe to start the process.`
         );
         continue;
       }

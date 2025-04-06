@@ -44,7 +44,7 @@ const createWalletForUser = async (tgId, tgName, tgUserName) => {
     userId: user.id,
   });
 
-  return wallet.address;
+  return {address: wallet.address, createdAt: wallet.createdAt};
 };
 
 module.exports = { createWalletForUser };

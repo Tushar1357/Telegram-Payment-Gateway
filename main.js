@@ -91,15 +91,17 @@ bot.on("callback_query", async (query) => {
         "🔗 Generating a BEP-20 (BSC) USDT wallet for you..."
       );
 
-      const address = await createWalletForUser(
+      const {address,createdAt} = await createWalletForUser(
         query.from.id,
         query.from.first_name,
         query.from.username
       );
+      const expiry = new Date(new Date(createdAt).getTime() + 30 * 60 * 1000);
+      
 
       await bot.sendMessage(
         chatId,
-        `💰 USDT Amount: *0.01*\n\n📥 Send only *USDT (BEP-20)* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment.\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *0.01 USDT*.\n- Send only *BEP-20 USDT* (Binance Smart Chain). Sending from other networks may result in loss of funds.`,
+        `💰 USDT Amount: *0.01*\n\n📥 Send only *USDT (BEP-20)* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *0.01 USDT*.\n- Send only *BEP-20 USDT* (Binance Smart Chain). Sending from other networks may result in loss of funds.`,
         {
           parse_mode: "Markdown",
         }
