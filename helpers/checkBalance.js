@@ -17,7 +17,6 @@ const chatId = process.env.CHATID;
 
 const checkBalance = async (bot) => {
   try {
-    console.log("Checking balance...");
     const walletDetail = await Wallets.findAll({
       where: {
         status: "unpaid",
