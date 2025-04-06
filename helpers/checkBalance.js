@@ -10,7 +10,7 @@ const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
 
 const TIMEOUT = 30 * 60 * 1000;
 
-const MIN_AMOUNT = 0;
+const MIN_AMOUNT = 0.01;
 
 const chatId = process.env.CHATID;
 

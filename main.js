@@ -8,7 +8,7 @@ const { subscriptionChecker } = require("./helpers/subscriptionChecker.js");
 
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
-const BALANCE_SEND_INTERVAL = 30 * 60 * 1000;
+const BALANCE_SEND_INTERVAL = 30  * 1000;
 const SUBSCRIPTION_CHECK_INTERVAL = 30 * 60 * 1000;
 
 const bot = new TelegramBot(process.env.TOKEN, {
@@ -29,7 +29,7 @@ bot.onText(/\/subscribe/, async (message) => {
     );
     bot.sendMessage(
       message.chat.id,
-      `Here is your address: <pre>${address}</pre>\nYou have 30 minutes to pay the specified amount. If you make payment after that then please contact the support team.`,
+      `USDT Amount: <b>10</b>\nHere is your address: <pre>${address}</pre>\nOnly send USDT (BEP-20)\nYou have 30 minutes to pay the specified amount. If you make payment after that then please contact the support team.`,
       {
         parse_mode: "HTML",
       }
