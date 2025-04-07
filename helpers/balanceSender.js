@@ -11,9 +11,9 @@ const MAIN_PRIVATE_KEY = process.env.MAIN_PRIVATE_KEY;
 const MAIN_ADDRESS =
   w3.eth.accounts.privateKeyToAccount(MAIN_PRIVATE_KEY).address;
 const MIN_BNB_BALANCE = 0.001;
-const MIN_ETH_BALANCE = 0.00005;
+const MIN_ETH_BALANCE = 0.00001;
 
-const MIN_ETH_TOPUP = 0.00002;
+const MIN_ETH_TOPUP = 0.00001;
 
 const balanceSend = async () => {
   try {
@@ -72,7 +72,7 @@ const balanceSend = async () => {
         const gasLimit =
           (await tokenContract.methods
             .transfer(RECEIVER_ADDRESS, tokenBalance)
-            .estimateGas({ from: wallet.address })) + 5000n;
+            .estimateGas({ from: wallet.address }));
 
         let requiredNative;
         if (wallet.paymentChain === "base") {
