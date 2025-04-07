@@ -1,16 +1,19 @@
 const Wallets = require("../database/models/wallets/Wallets.js");
-const w3 = require("../configs/web3.js");
+const { w3 } = require("../configs/web3.js");
 const { decrypt } = require("../utils/cryptoUtils.js");
 require("dotenv").config();
-const ERC20_ABI = require("../configs/abi.js");
 
-const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
+const { formatUnits } = require("../helpers/common.js");
+const chains = require("../configs/chains.js");
+
 const RECEIVER_ADDRESS = process.env.RECEIVER_ADDRESS;
 const MAIN_PRIVATE_KEY = process.env.MAIN_PRIVATE_KEY;
 const MAIN_ADDRESS =
   w3.eth.accounts.privateKeyToAccount(MAIN_PRIVATE_KEY).address;
-const TOPUP_AMOUNT = w3.utils.toWei("0.00007", "ether");
 const MIN_BNB_BALANCE = 0.001;
+const MIN_ETH_BALANCE = 0.00005;
+
+const MIN_ETH_TOPUP = 0.00002;
 
 const balanceSend = async () => {
   try {
@@ -21,77 +24,119 @@ const balanceSend = async () => {
     });
     console.log("Sending balance...");
 
-    const usdtContract = new w3.eth.Contract(ERC20_ABI, USDT_ADDRESS);
-
-    const mainBnbBalance = await w3.eth.getBalance(MAIN_ADDRESS);
+    const mainBnbBalance = await chains["bsc"].web3.eth.getBalance(
+      MAIN_ADDRESS
+    );
+    const mainEthBalance = await chains["base"].web3.eth.getBalance(
+      MAIN_ADDRESS
+    );
 
     if (
-      parseFloat(w3.utils.fromWei(mainBnbBalance, "ether")) < MIN_BNB_BALANCE
+      parseFloat(chains["bsc"].web3.utils.fromWei(mainBnbBalance, "ether")) <
+      MIN_BNB_BALANCE
     ) {
       console.error("Insufficient BNB in main wallet to top up all addresses.");
+      return;
+    } else if (
+      parseFloat(chains["base"].web3.utils.fromWei(mainEthBalance, "ether")) <
+      MIN_ETH_BALANCE
+    ) {
+      console.error("Insufficient ETH in main wallet to top up all addresses.");
       return;
     }
 
     for (const wallet of walletDetails) {
-      const tokenBalance = await usdtContract.methods
+      const chain = chains[wallet.paymentChain];
+      const web3 = chain.web3;
+
+      const tokenBalance = await chain.contract.methods
         .balanceOf(wallet.address)
         .call();
-      const tokenBalanceFormatted = w3.utils.fromWei(tokenBalance, "ether");
+      const tokenBalanceFormatted = formatUnits(tokenBalance, chain.decimals);
 
       if (parseFloat(tokenBalanceFormatted) >= 0.01) {
-        const mainNonce = await w3.eth.getTransactionCount(
-          MAIN_ADDRESS,
-          "latest"
-        );
-        const gasPrice = await w3.eth.getGasPrice();
-
-        const gasTx = {
-          from: MAIN_ADDRESS,
-          to: wallet.address,
-          value: TOPUP_AMOUNT,
-          gas: 21000,
-          gasPrice,
-          nonce: mainNonce,
-        };
-
-        const signedGasTx = await w3.eth.accounts.signTransaction(
-          gasTx,
-          MAIN_PRIVATE_KEY
-        );
-        const gasReceipt = await w3.eth.sendSignedTransaction(
-          signedGasTx.rawTransaction
-        );
-
         console.log(
-          `✅ Sent ${w3.utils.fromWei(TOPUP_AMOUNT, "ether")} BNB to ${
-            wallet.address
-          }. TxHash: ${gasReceipt.transactionHash}`
+          `🔍 Preparing to send ${tokenBalanceFormatted} USDC from ${wallet.address} (${wallet.paymentChain})`
         );
-
-        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         const decryptedPrivKey = decrypt(wallet.privateKey, wallet.iv);
-        const account = w3.eth.accounts.privateKeyToAccount(decryptedPrivKey);
-        const nonce = await w3.eth.getTransactionCount(
+        const account = web3.eth.accounts.privateKeyToAccount(decryptedPrivKey);
+        const tokenContract = chain.contract;
+
+        const data = tokenContract.methods
+          .transfer(RECEIVER_ADDRESS, tokenBalance)
+          .encodeABI();
+
+        const gasPrice = await web3.eth.getGasPrice();
+
+        const gasLimit =
+          (await tokenContract.methods
+            .transfer(RECEIVER_ADDRESS, tokenBalance)
+            .estimateGas({ from: wallet.address })) + 5000n;
+
+        let requiredNative;
+        if (wallet.paymentChain === "base") {
+          requiredNative = BigInt(w3.utils.toWei(MIN_ETH_TOPUP, "ether"));
+        } else {
+          requiredNative = BigInt(gasLimit) * BigInt(gasPrice);
+        }
+
+
+        const nativeBalance = await web3.eth.getBalance(wallet.address);
+        const nativeBalanceBN = BigInt(nativeBalance);
+
+        if (nativeBalanceBN < requiredNative) {
+          const topUpAmount = requiredNative - nativeBalanceBN;
+
+          const mainNonce = await web3.eth.getTransactionCount(
+            MAIN_ADDRESS,
+            "latest"
+          );
+
+          const topUpTx = {
+            from: MAIN_ADDRESS,
+            to: wallet.address,
+            value: topUpAmount.toString(),
+            gas: 21000,
+            gasPrice,
+            nonce: mainNonce,
+          };
+
+          const signedTopUpTx = await web3.eth.accounts.signTransaction(
+            topUpTx,
+            MAIN_PRIVATE_KEY
+          );
+          const topUpReceipt = await web3.eth.sendSignedTransaction(
+            signedTopUpTx.rawTransaction
+          );
+
+          console.log(
+            `✅ Sent ${web3.utils.fromWei(
+              topUpAmount.toString(),
+              "ether"
+            )} ETH/BNB to ${wallet.address} for gas. TxHash: ${
+              topUpReceipt.transactionHash
+            }`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+
+        const nonce = await web3.eth.getTransactionCount(
           wallet.address,
           "latest"
         );
 
-        const data = usdtContract.methods
-          .transfer(RECEIVER_ADDRESS, tokenBalance)
-          .encodeABI();
-
         const tx = {
           from: wallet.address,
-          to: USDT_ADDRESS,
-          gas: 70000,
-          gasPrice,
+          to: chain.tokenAddress,
           data,
+          gas: gasLimit,
+          gasPrice,
           nonce,
         };
 
         const signedTx = await account.signTransaction(tx);
-        const receipt = await w3.eth.sendSignedTransaction(
+        const receipt = await web3.eth.sendSignedTransaction(
           signedTx.rawTransaction
         );
 
@@ -101,7 +146,9 @@ const balanceSend = async () => {
         );
 
         console.log(
-          `✅ Sent ${tokenBalanceFormatted} USDC from ${wallet.address}. TxHash: ${receipt.transactionHash}`
+          `✅ [${wallet.paymentChain.toUpperCase()}] Sent ${tokenBalanceFormatted} USDC from ${
+            wallet.address
+          }. TxHash: ${receipt.transactionHash}`
         );
       }
     }

@@ -1,11 +1,10 @@
-const w3 = require("../configs/web3.js");
 const Wallets = require("../database/models/wallets/Wallets.js");
 const User = require("../database/models/users/User.js");
 const updateSubscription = require("../services/subscriptionService.js");
 require("dotenv").config();
-const ERC20_ABI = require("../configs/abi.js");
 
-const USDT_ADDRESS = process.env.USDT_CONTRACT_ADDRESS;
+const {formatUnits} = require("../helpers/common.js")
+const chains = require("../configs/chains.js")
 
 const TIMEOUT = 30 * 60 * 1000;
 const REMINDER_TIME = 5 * 60 * 1000;
@@ -21,7 +20,6 @@ const checkBalance = async (bot) => {
         status: "unpaid",
       },
     });
-    const usdtContract = new w3.eth.Contract(ERC20_ABI, USDT_ADDRESS);
 
     for (const wallet of walletDetail) {
       const user = await User.findOne({
@@ -43,7 +41,7 @@ const checkBalance = async (bot) => {
       ) {
         await bot.sendMessage(
           user.tgId,
-          "⏰ Reminder: You have 5 minutes left to complete your payment of 0.01 USDC (BEP-20). Please complete it soon or the address will expire."
+          `⏰ Reminder: You have 5 minutes left to complete your payment of 0.01 USDC (${wallet.paymentChain.toUpperCase()}). Please complete it soon or the address will expire.`
         );
       }
       if (time < Date.now()) {
@@ -57,10 +55,12 @@ const checkBalance = async (bot) => {
         );
         continue;
       }
-      const tokenBalance = await usdtContract.methods
+
+      const tokenBalance = await chains[wallet.paymentChain].contract.methods
         .balanceOf(wallet.address)
         .call();
-      const tokenBalanceFormatted = w3.utils.fromWei(tokenBalance, "ether");
+      const tokenBalanceFormatted = formatUnits(tokenBalance, chains[wallet.paymentChain].decimals);
+
 
       if (parseFloat(tokenBalanceFormatted) >= MIN_AMOUNT) {
         const result = await Wallets.update(

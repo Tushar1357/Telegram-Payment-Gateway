@@ -1,4 +1,4 @@
-const w3 = require("../configs/web3.js");
+const {w3,basew3} = require("../configs/web3.js");
 const crypto = require("crypto");
 require('dotenv').config()
 

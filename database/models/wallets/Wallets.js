@@ -39,6 +39,10 @@ const Wallets = sequelize.define("Wallets", {
   balanceSent: {
     type: DataTypes.BOOLEAN,
     allowNull: true,
+  },
+  paymentChain: {
+    type: DataTypes.STRING,
+    allowNull: false,
   }
 });
 
