@@ -35,13 +35,13 @@ const balanceSend = async () => {
       parseFloat(chains["bsc"].web3.utils.fromWei(mainBnbBalance, "ether")) <
       MIN_BNB_BALANCE
     ) {
-      console.error("Insufficient BNB in main wallet to top up all addresses.");
+      console.log("Insufficient BNB in main wallet to top up all addresses.");
       return;
     } else if (
       parseFloat(chains["base"].web3.utils.fromWei(mainEthBalance, "ether")) <
       MIN_ETH_BALANCE
     ) {
-      console.error("Insufficient ETH in main wallet to top up all addresses.");
+      console.log("Insufficient ETH in main wallet to top up all addresses.");
       return;
     }
 
