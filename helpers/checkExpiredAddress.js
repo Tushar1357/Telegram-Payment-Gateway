@@ -39,6 +39,7 @@ const checkExpiredAddress = async (tgId) => {
         await Wallets.update(
           {
             status: "unpaid",
+            createdAt: new Date(new Date(wallet.createdAt).getTime() + 60 * 1000)
           },
           {
             where: {
