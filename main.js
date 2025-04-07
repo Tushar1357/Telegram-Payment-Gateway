@@ -68,7 +68,7 @@ bot.onText(/\/check-expiry/, async (message) => {
       const text = message.text.split(" ");
       const usertgId = Number(text[1]);
       const result = await checkExpiredAddress(usertgId);
-      bot.sendMessage(ADMIN_CHATID, result);
+      bot.sendMessage(chatId, result);
     } else {
       bot.sendMessage(message.chat.id, "Only admin can call this command.");
     }
