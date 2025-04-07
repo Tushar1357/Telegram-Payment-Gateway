@@ -50,8 +50,10 @@ const checkExpiredAddress = async (tgId) => {
         return `Checked all expiry addresses and found expiry address ${wallet.address} with payment.`
       }
 
-      return "No expiry addresses found with payment."
+      
     }
+
+    return "No expiry addresses found with payment."
 
   } catch (error) {
     console.log("Error while checking expired addresses", error?.message);
