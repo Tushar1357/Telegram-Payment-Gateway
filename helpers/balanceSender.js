@@ -9,7 +9,7 @@ const RECEIVER_ADDRESS = process.env.RECEIVER_ADDRESS;
 const MAIN_PRIVATE_KEY = process.env.MAIN_PRIVATE_KEY;
 const MAIN_ADDRESS =
   w3.eth.accounts.privateKeyToAccount(MAIN_PRIVATE_KEY).address;
-const TOPUP_AMOUNT = w3.utils.toWei("0.0001", "ether");
+const TOPUP_AMOUNT = w3.utils.toWei("0.00007", "ether");
 const MIN_BNB_BALANCE = 0.001;
 
 const balanceSend = async () => {
@@ -84,7 +84,7 @@ const balanceSend = async () => {
         const tx = {
           from: wallet.address,
           to: USDT_ADDRESS,
-          gas: 100000,
+          gas: 70000,
           gasPrice,
           data,
           nonce,
