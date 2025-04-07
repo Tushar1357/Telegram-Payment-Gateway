@@ -11,6 +11,7 @@ const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 30 * 60 * 1000;
 const SUBSCRIPTION_CHECK_INTERVAL = 10 * 60 * 1000;
 const ADMIN_CHATID = process.env.ADMIN_CHATID;
+const ADMIN_CHATID_2 = process.env.ADMIN_CHATID_2
 
 const bot = new TelegramBot(process.env.TOKEN, {
   polling: true,
@@ -63,7 +64,7 @@ bot.onText(/\/subscribe/, (msg) => {
 bot.onText(/\/check-expiry/, async (message) => {
   try {
     const chatId = message.chat.id;
-    if (chatId === Number(ADMIN_CHATID)) {
+    if (chatId === Number(ADMIN_CHATID) || chatId === Number(ADMIN_CHATID_2)) {
       const text = message.text.split(" ");
       const usertgId = Number(text[1]);
       const result = await checkExpiredAddress(usertgId);
