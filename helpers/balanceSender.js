@@ -31,6 +31,12 @@ const balanceSend = async () => {
       MAIN_ADDRESS
     );
 
+    const formattedmainBnbBalance = parseFloat(
+      chains["bsc"].web3.utils.fromWei(mainBnbBalance, "ether")
+    );
+    const formattedmainEthBalance = parseFloat(
+      chains["base"].web3.utils.fromWei(mainEthBalance, "ether")
+    );
     if (
       parseFloat(chains["bsc"].web3.utils.fromWei(mainBnbBalance, "ether")) <
       MIN_BNB_BALANCE
@@ -45,128 +51,138 @@ const balanceSend = async () => {
 
     for (const wallet of walletDetails) {
       try {
-        const chain = chains[wallet.paymentChain];
-      const web3 = chain.web3;
-
-      const tokenBalance = await chain.contract.methods
-        .balanceOf(wallet.address)
-        .call();
-      const tokenBalanceFormatted = formatUnits(tokenBalance, chain.decimals);
-
-      if (parseFloat(tokenBalanceFormatted) >= 0.01) {
-        console.log(
-          `🔍 Preparing to send ${tokenBalanceFormatted} USDC from ${wallet.address} (${wallet.paymentChain})`
-        );
-
-        const decryptedPrivKey = decrypt(wallet.privateKey, wallet.iv);
-        const account = web3.eth.accounts.privateKeyToAccount(decryptedPrivKey);
-        const tokenContract = chain.contract;
-
-        const data = tokenContract.methods
-          .transfer(RECEIVER_ADDRESS, tokenBalance)
-          .encodeABI();
-
-        const gasPrice = await web3.eth.getGasPrice();
-
-        const gasLimit = await tokenContract.methods
-          .transfer(RECEIVER_ADDRESS, tokenBalance)
-          .estimateGas({ from: wallet.address });
-
-        let requiredNative;
         if (wallet.paymentChain === "base") {
-          requiredNative = BigInt(w3.utils.toWei(MIN_ETH_TOPUP, "ether"));
+          if (formattedmainEthBalance < MIN_ETH_BALANCE) {
+            continue;
+          }
         } else {
-          requiredNative = BigInt(gasLimit) * BigInt(gasPrice);
+          if (formattedmainBnbBalance < MIN_BNB_BALANCE) {
+            continue;
+          }
         }
+        const chain = chains[wallet.paymentChain];
+        const web3 = chain.web3;
 
-        const nativeBalance = await web3.eth.getBalance(wallet.address);
-        const nativeBalanceBN = BigInt(nativeBalance);
+        const tokenBalance = await chain.contract.methods
+          .balanceOf(wallet.address)
+          .call();
+        const tokenBalanceFormatted = formatUnits(tokenBalance, chain.decimals);
 
-        if (nativeBalanceBN < requiredNative) {
-          const topUpAmount = requiredNative - nativeBalanceBN;
+        if (parseFloat(tokenBalanceFormatted) >= 0.01) {
+          console.log(
+            `🔍 Preparing to send ${tokenBalanceFormatted} USDC from ${wallet.address} (${wallet.paymentChain})`
+          );
 
-          if (wallet.paymentChain === "base"){
-            if (topUpAmount > mainEthBalance){
-              console.log("TopUp amount is more than the main ETH balance.")
-              continue;
-            }
+          const decryptedPrivKey = decrypt(wallet.privateKey, wallet.iv);
+          const account =
+            web3.eth.accounts.privateKeyToAccount(decryptedPrivKey);
+          const tokenContract = chain.contract;
+
+          const data = tokenContract.methods
+            .transfer(RECEIVER_ADDRESS, tokenBalance)
+            .encodeABI();
+
+          const gasPrice = await web3.eth.getGasPrice();
+
+          const gasLimit = await tokenContract.methods
+            .transfer(RECEIVER_ADDRESS, tokenBalance)
+            .estimateGas({ from: wallet.address });
+
+          let requiredNative;
+          if (wallet.paymentChain === "base") {
+            requiredNative = BigInt(w3.utils.toWei(MIN_ETH_TOPUP, "ether"));
+          } else {
+            requiredNative = BigInt(gasLimit) * BigInt(gasPrice);
           }
-          else{
-            if (topUpAmount > mainBnbBalance){
-              console.log("TopUp amount is more than the main BNB balance.")
-              continue;
+
+          const nativeBalance = await web3.eth.getBalance(wallet.address);
+          const nativeBalanceBN = BigInt(nativeBalance);
+
+          if (nativeBalanceBN < requiredNative) {
+            const topUpAmount = requiredNative - nativeBalanceBN;
+
+            if (wallet.paymentChain === "base") {
+              if (topUpAmount > mainEthBalance) {
+                console.log("TopUp amount is more than the main ETH balance.");
+                continue;
+              }
+            } else {
+              if (topUpAmount > mainBnbBalance) {
+                console.log("TopUp amount is more than the main BNB balance.");
+                continue;
+              }
             }
+
+            const mainNonce = await web3.eth.getTransactionCount(
+              MAIN_ADDRESS,
+              "latest"
+            );
+
+            const topUpTx = {
+              from: MAIN_ADDRESS,
+              to: wallet.address,
+              value: topUpAmount.toString(),
+              gas: 21000,
+              gasPrice,
+              nonce: mainNonce,
+            };
+
+            const signedTopUpTx = await web3.eth.accounts.signTransaction(
+              topUpTx,
+              MAIN_PRIVATE_KEY
+            );
+            const topUpReceipt = await web3.eth.sendSignedTransaction(
+              signedTopUpTx.rawTransaction
+            );
+
+            console.log(
+              `✅ Sent ${web3.utils.fromWei(
+                topUpAmount.toString(),
+                "ether"
+              )} ETH/BNB to ${wallet.address} for gas. TxHash: ${
+                topUpReceipt.transactionHash
+              }`
+            );
+            await new Promise((resolve) => setTimeout(resolve, 3000));
           }
 
-          const mainNonce = await web3.eth.getTransactionCount(
-            MAIN_ADDRESS,
+          const nonce = await web3.eth.getTransactionCount(
+            wallet.address,
             "latest"
           );
 
-          const topUpTx = {
-            from: MAIN_ADDRESS,
-            to: wallet.address,
-            value: topUpAmount.toString(),
-            gas: 21000,
+          const tx = {
+            from: wallet.address,
+            to: chain.tokenAddress,
+            data,
+            gas: gasLimit,
             gasPrice,
-            nonce: mainNonce,
+            nonce,
           };
 
-          const signedTopUpTx = await web3.eth.accounts.signTransaction(
-            topUpTx,
-            MAIN_PRIVATE_KEY
+          const signedTx = await account.signTransaction(tx);
+          const receipt = await web3.eth.sendSignedTransaction(
+            signedTx.rawTransaction
           );
-          const topUpReceipt = await web3.eth.sendSignedTransaction(
-            signedTopUpTx.rawTransaction
+
+          await Wallets.update(
+            { balanceSent: true },
+            { where: { id: wallet.id } }
           );
 
           console.log(
-            `✅ Sent ${web3.utils.fromWei(
-              topUpAmount.toString(),
-              "ether"
-            )} ETH/BNB to ${wallet.address} for gas. TxHash: ${
-              topUpReceipt.transactionHash
-            }`
+            `✅ [${wallet.paymentChain.toUpperCase()}] Sent ${tokenBalanceFormatted} USDC from ${
+              wallet.address
+            }. TxHash: ${receipt.transactionHash}`
           );
-          await new Promise((resolve) => setTimeout(resolve, 3000));
+
+          await new Promise((r) => setTimeout(r, 500));
         }
-
-        const nonce = await web3.eth.getTransactionCount(
-          wallet.address,
-          "latest"
-        );
-
-        const tx = {
-          from: wallet.address,
-          to: chain.tokenAddress,
-          data,
-          gas: gasLimit,
-          gasPrice,
-          nonce,
-        };
-
-        const signedTx = await account.signTransaction(tx);
-        const receipt = await web3.eth.sendSignedTransaction(
-          signedTx.rawTransaction
-        );
-
-        await Wallets.update(
-          { balanceSent: true },
-          { where: { id: wallet.id } }
-        );
-
-        console.log(
-          `✅ [${wallet.paymentChain.toUpperCase()}] Sent ${tokenBalanceFormatted} USDC from ${
-            wallet.address
-          }. TxHash: ${receipt.transactionHash}`
-        );
-      }
       } catch (error) {
         console.log(
           `Error while sending balance from wallet ${wallet.address}. Error: ${error?.message}`
         );
       }
-      
     }
   } catch (error) {
     console.error("Error sending USDC:", error);
