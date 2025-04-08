@@ -44,12 +44,14 @@ const createWalletForUser = async (tgId, tgName, tgUserName, paymentChain) => {
           }
         );
         return {
+          status: "changed_chain",
           address: existingWallet.address,
           createdAt: new Date(Date.now()),
         };
       }
       if (walletAge < THIRTY_MINUTES) {
         return {
+          status: "old",
           address: existingWallet.address,
           createdAt: existingWallet.createdAt,
         };
@@ -72,7 +74,11 @@ const createWalletForUser = async (tgId, tgName, tgUserName, paymentChain) => {
       paymentChain,
     });
 
-    return { address: wallet.address, createdAt: wallet.createdAt };
+    return {
+      status: "new",
+      address: wallet.address,
+      createdAt: wallet.createdAt,
+    };
   } catch (error) {
     console.log(
       `Error while creating wallet address. Error: ${error?.message}`

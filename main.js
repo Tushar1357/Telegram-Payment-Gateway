@@ -53,7 +53,6 @@ bot.onText(/\/subscribe/, async (msg) => {
   const chatId = msg.chat.id;
 
   const message = `💳 *Choose your payment method to proceed with the subscription:*`;
-
   const options = {
     parse_mode: "Markdown",
     reply_markup: {
@@ -76,7 +75,10 @@ bot.onText(/\/check_expiry/, async (message) => {
       const result = await checkExpiredAddress(usertgId);
       await bot.sendMessage(chatId, result);
     } else {
-      await bot.sendMessage(message.chat.id, "Only admin can call this command.");
+      await bot.sendMessage(
+        message.chat.id,
+        "Only admin can call this command."
+      );
     }
   } catch (error) {
     console.log(error);
@@ -84,7 +86,7 @@ bot.onText(/\/check_expiry/, async (message) => {
 });
 
 bot.onText(/\/check_both_chains/, async (message) => {
-  try{
+  try {
     const chatId = message.chat.id;
     if (chatId === Number(ADMIN_CHATID) || chatId === Number(ADMIN_CHATID_2)) {
       const text = message.text.split(" ");
@@ -92,13 +94,15 @@ bot.onText(/\/check_both_chains/, async (message) => {
       const result = await checkBothChains(usertgId);
       await bot.sendMessage(chatId, result);
     } else {
-      await bot.sendMessage(message.chat.id, "Only admin can call this command.");
+      await bot.sendMessage(
+        message.chat.id,
+        "Only admin can call this command."
+      );
     }
-  }
-  catch(error){
+  } catch (error) {
     console.log(error);
   }
-})
+});
 
 bot.onText(/\/check_validity/, async (message) => {
   try {
@@ -128,10 +132,6 @@ bot.on("callback_query", async (query) => {
     await bot.answerCallbackQuery(query.id);
     const chainLabel = choice === "bsc" ? "BSC" : "BASE";
 
-    await bot.sendMessage(
-      chatId,
-      `🔗 Generating a ${chainLabel} USDC wallet for you...`
-    );
     let wallet;
     try {
       wallet = await createWalletForUser(
@@ -148,19 +148,54 @@ bot.on("callback_query", async (query) => {
       );
     }
 
-    const { address, createdAt } = wallet;
+    const { status, address, createdAt } = wallet;
 
     const expiry = new Date(new Date(createdAt).getTime() + 30 * 60 * 1000);
 
-    await bot.sendMessage(
-      chatId,
-      `💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
-        choice === "bsc" ? "Binance smart chain" : "Base Chain"
-      }). Sending from other networks may result in loss of funds.`,
-      {
-        parse_mode: "Markdown",
-      }
-    );
+    if (status === "new") {
+      await bot.sendMessage(
+        chatId,
+        `🔗 Generating a ${chainLabel} USDC wallet for you...`
+      );
+      await new Promise((r) => setTimeout(r, 500));
+      await bot.sendMessage(
+        chatId,
+        `💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
+          choice === "bsc" ? "Binance smart chain" : "Base Chain"
+        }). Sending from other networks may result in loss of funds.`,
+        {
+          parse_mode: "Markdown",
+        }
+      );
+    } else if (status === "changed_chain") {
+      await bot.sendMessage(
+        chatId,
+        `You have changed the chain from ${
+          choice === "base" ? "BSC" : "BASE"
+        } to ${choice.toUpperCase()}\n\n💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
+          choice === "bsc" ? "Binance smart chain" : "Base Chain"
+        }). Sending from other networks may result in loss of funds.`,
+        {
+          parse_mode: "Markdown",
+        }
+      );
+    } else if (status === "old") {
+      await bot.sendMessage(
+        chatId,
+        `You are already having a pending payment of 10$ on ${choice.toUpperCase()} chain. Please complete that or wait for 30 minutes to generate a new address.\n\n💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
+          choice === "bsc" ? "Binance smart chain" : "Base Chain"
+        }). Sending from other networks may result in loss of funds.`,
+        {
+          parse_mode: "Markdown",
+        }
+      );
+    }
+
+    try {
+      await bot.deleteMessage(query.message.chat.id, query.message.message_id);
+    } catch (err) {
+      console.log("Failed to delete message:", err.message);
+    }
   } catch (error) {
     console.error("Error in callback_query:", error);
     bot.sendMessage(
