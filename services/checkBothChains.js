@@ -2,6 +2,8 @@ const Wallets = require("../database/models/wallets/Wallets.js");
 const chains = require("../configs/chains.js");
 const User = require("../database/models/users/User.js");
 const { formatUnits } = require("../helpers/common.js");
+const {MIN_AMOUNT} = require("../configs/common.js")
+
 
 const checkBothChains = async (tgId) => {
   try {
@@ -19,6 +21,9 @@ const checkBothChains = async (tgId) => {
         userId: user.id,
         status: ["unpaid", "expired"],
       },
+      order: [
+        ["createdAt","DESC"]
+      ]
     });
 
     if (!wallets || wallets.length === 0) {
@@ -38,7 +43,7 @@ const checkBothChains = async (tgId) => {
               formatUnits(tokenBalance, chain.decimals)
             );
 
-            if (formattedBalance >= 0.01) {
+            if (formattedBalance >= MIN_AMOUNT) {
               await Wallets.update(
                 {
                   status: "unpaid",

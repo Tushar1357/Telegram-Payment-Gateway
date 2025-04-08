@@ -2,7 +2,7 @@ const Wallets = require("../database/models/wallets/Wallets.js");
 const { w3 } = require("../configs/web3.js");
 const { decrypt } = require("../utils/cryptoUtils.js");
 require("dotenv").config();
-
+const {MIN_AMOUNT,MIN_BNB_BALANCE,MIN_ETH_BALANCE,MIN_ETH_TOPUP} = require("../configs/common.js")
 const { formatUnits } = require("../helpers/common.js");
 const chains = require("../configs/chains.js");
 
@@ -10,10 +10,6 @@ const RECEIVER_ADDRESS = process.env.RECEIVER_ADDRESS;
 const MAIN_PRIVATE_KEY = process.env.MAIN_PRIVATE_KEY;
 const MAIN_ADDRESS =
   w3.eth.accounts.privateKeyToAccount(MAIN_PRIVATE_KEY).address;
-const MIN_BNB_BALANCE = 0.001;
-const MIN_ETH_BALANCE = 0.00001;
-
-const MIN_ETH_TOPUP = 0.00001;
 
 const balanceSend = async () => {
   try {
@@ -68,7 +64,7 @@ const balanceSend = async () => {
           .call();
         const tokenBalanceFormatted = formatUnits(tokenBalance, chain.decimals);
 
-        if (parseFloat(tokenBalanceFormatted) >= 0.01) {
+        if (parseFloat(tokenBalanceFormatted) >= MIN_AMOUNT) {
           console.log(
             `🔍 Preparing to send ${tokenBalanceFormatted} USDC from ${wallet.address} (${wallet.paymentChain})`
           );

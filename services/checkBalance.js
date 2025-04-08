@@ -2,14 +2,12 @@ const Wallets = require("../database/models/wallets/Wallets.js");
 const User = require("../database/models/users/User.js");
 const updateSubscription = require("./subscriptionService.js");
 require("dotenv").config();
-
+const {MIN_AMOUNT} = require("../configs/common.js")
 const { formatUnits } = require("../helpers/common.js");
 const chains = require("../configs/chains.js");
 
 const TIMEOUT = 30 * 60 * 1000;
 const REMINDER_TIME = 5 * 60 * 1000;
-
-const MIN_AMOUNT = 0.01;
 
 const chatId = process.env.CHATID;
 
@@ -42,7 +40,7 @@ const checkBalance = async (bot) => {
         ) {
           await bot.sendMessage(
             user.tgId,
-            `⏰ Reminder: You have 5 minutes left to complete your payment of 0.01 USDC (${wallet.paymentChain.toUpperCase()}). Please complete it soon or the address will expire.`
+            `⏰ Reminder: You have 5 minutes left to complete your payment of ${MIN_AMOUNT} USDC (${wallet.paymentChain.toUpperCase()}). Please complete it soon or the address will expire.`
           );
         }
         if (time < Date.now()) {

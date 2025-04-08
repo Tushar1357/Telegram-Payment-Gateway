@@ -9,6 +9,7 @@ const checkExpiredAddress = require("./services/checkExpiredAddress.js");
 const checkValidity = require("./services/checkValidity.js");
 const createUser = require("./services/createUser.js");
 const { checkBothChains } = require("./services/checkBothChains.js");
+const { MIN_AMOUNT } = require("./configs/common.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 30 * 60 * 1000;
@@ -153,7 +154,7 @@ bot.on("callback_query", async (query) => {
 
     await bot.sendMessage(
       chatId,
-      `💰 USDC Amount: *0.01*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *0.01 USDC*.\n- Send only *(${chainLabel}) USDC* (${
+      `💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
         choice === "bsc" ? "Binance smart chain" : "Base Chain"
       }). Sending from other networks may result in loss of funds.`,
       {

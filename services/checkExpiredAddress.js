@@ -3,8 +3,8 @@ const User = require("../database/models/users/User.js");
 require("dotenv").config();
 const chains = require("../configs/chains.js");
 const { formatUnits } = require("../helpers/common.js");
+const {MIN_AMOUNT} = require("../configs/common.js")
 
-const MIN_AMOUNT = 0.01;
 
 const checkExpiredAddress = async (tgId) => {
   try {
@@ -21,6 +21,9 @@ const checkExpiredAddress = async (tgId) => {
         status: "expired",
         userId: user.id,
       },
+      order: [
+        ["createdAt","DESC"]
+      ]
     });
 
     for (const wallet of expiredWallets) {
