@@ -50,7 +50,7 @@ const checkBalance = async (bot) => {
             { status: "expired" },
             { where: { id: wallet.id } }
           );
-          bot.sendMessage(
+          await bot.sendMessage(
             user.tgId,
             `Your payment time is over and the wallet address ${wallet.address} has expired. Kindly click on /subscribe to restart the process.`
           );
@@ -89,7 +89,7 @@ const checkBalance = async (bot) => {
             member_limit: 1,
             expire_date: Math.floor(Date.now() / 1000) + 60,
           });
-          bot.sendMessage(
+          await bot.sendMessage(
             user.tgId,
             `🎉 *Subscription Activated!*\n\n✅ You’ve successfully purchased your subscription.\n\n🔗 *Access the Channel:*\n[Click here to join](${
               channelLink.invite_link

@@ -40,7 +40,7 @@ const subscriptionChecker = async (bot) => {
           } else {
             await bot.banChatMember(chatId, user.tgId);
             await bot.unbanChatMember(chatId, user.tgId);
-            bot.sendMessage(
+            await bot.sendMessage(
               user.tgId,
               `❗️ Your subscription expired on ${new Date(
                 expiration
@@ -56,7 +56,7 @@ const subscriptionChecker = async (bot) => {
           expiration - now > 0 &&
           !user.reminderSent
         ) {
-          bot.sendMessage(
+          await bot.sendMessage(
             user.tgId,
             `⏳ Reminder: Your subscription will expire on ${new Date(
               expiration

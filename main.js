@@ -22,11 +22,7 @@ syncDb();
 
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
-  await createUser(
-    msg.chat.id,
-    msg.chat.first_name,
-    msg.chat.username
-  )
+  await createUser(msg.chat.id, msg.chat.first_name, msg.chat.username);
 
   const message = `
 👋 *Welcome to Mr. S Premium!*
@@ -45,13 +41,13 @@ To get started, just click /subscribe
 Need help? Contact @MrBean000.
 `;
 
-  bot.sendMessage(chatId, message, {
+  await bot.sendMessage(chatId, message, {
     parse_mode: "Markdown",
     disable_web_page_preview: true,
   });
 });
 
-bot.onText(/\/subscribe/, (msg) => {
+bot.onText(/\/subscribe/, async (msg) => {
   const chatId = msg.chat.id;
 
   const message = `💳 *Choose your payment method to proceed with the subscription:*`;
@@ -66,7 +62,7 @@ bot.onText(/\/subscribe/, (msg) => {
     },
   };
 
-  bot.sendMessage(chatId, message, options);
+  await bot.sendMessage(chatId, message, options);
 });
 
 bot.onText(/\/check-expiry/, async (message) => {
@@ -76,9 +72,9 @@ bot.onText(/\/check-expiry/, async (message) => {
       const text = message.text.split(" ");
       const usertgId = Number(text[1]);
       const result = await checkExpiredAddress(usertgId);
-      bot.sendMessage(chatId, result);
+      await bot.sendMessage(chatId, result);
     } else {
-      bot.sendMessage(message.chat.id, "Only admin can call this command.");
+      await bot.sendMessage(message.chat.id, "Only admin can call this command.");
     }
   } catch (error) {
     console.log(error);
