@@ -12,7 +12,7 @@ const { checkBothChains } = require("./services/checkBothChains.js");
 const { MIN_AMOUNT } = require("./configs/common.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
-const BALANCE_SEND_INTERVAL = 30 * 1000;
+const BALANCE_SEND_INTERVAL = 30 * 60 * 1000;
 const SUBSCRIPTION_CHECK_INTERVAL = 10 * 60 * 1000;
 const ADMIN_CHATID = process.env.ADMIN_CHATID;
 const ADMIN_CHATID_2 = process.env.ADMIN_CHATID_2;
@@ -40,7 +40,7 @@ To access our private channel, you’ll need to purchase a subscription using *U
 
 To get started, just click /subscribe
 
-Need help? Contact @MrBean000.
+Need help? Contact @Skelter10 or @MrBean000.
 `;
 
   await bot.sendMessage(chatId, message, {
@@ -160,7 +160,7 @@ bot.on("callback_query", async (query) => {
       await new Promise((r) => setTimeout(r, 500));
       await bot.sendMessage(
         chatId,
-        `💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
+        `💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @Skelter10 or @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
           choice === "bsc" ? "Binance smart chain" : "Base Chain"
         }). Sending from other networks may result in loss of funds.`,
         {
@@ -172,7 +172,7 @@ bot.on("callback_query", async (query) => {
         chatId,
         `You have changed the chain from ${
           choice === "base" ? "BSC" : "BASE"
-        } to ${choice.toUpperCase()}\n\n💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
+        } to ${choice.toUpperCase()}\n\n💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @Skelter10 or @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
           choice === "bsc" ? "Binance smart chain" : "Base Chain"
         }). Sending from other networks may result in loss of funds.`,
         {
@@ -182,7 +182,7 @@ bot.on("callback_query", async (query) => {
     } else if (status === "old") {
       await bot.sendMessage(
         chatId,
-        `You are already having a pending payment of 10$ on ${choice.toUpperCase()} chain. Please complete that or wait for 30 minutes to generate a new address.\n\n💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
+        `You are already having a pending payment of 10$ on ${choice.toUpperCase()} chain. Please complete that or wait for 30 minutes to generate a new address.\n\n💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @Skelter10 or @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically.\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
           choice === "bsc" ? "Binance smart chain" : "Base Chain"
         }). Sending from other networks may result in loss of funds.`,
         {

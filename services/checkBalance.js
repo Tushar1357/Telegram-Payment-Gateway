@@ -93,14 +93,14 @@ const checkBalance = async (bot) => {
               channelLink.invite_link
             })\n\n🕒 *Subscription Valid Till:*\n${new Date(
               expirationTime
-            ).toUTCString()}\n\nThank you for subscribing! If you face any issues, feel free to reach out to @MrBean000.`,
+            ).toUTCString()}\n\nThank you for subscribing! If you face any issues, feel free to reach out to @Skelter10 or @MrBean000.`,
             {
               parse_mode: "Markdown",
               disable_web_page_preview: true,
             }
           );
         }
-        await new Promise((r) => setTimeout(r, 200));
+        await new Promise((r) => setTimeout(r, 100));
       } catch (error) {
         console.log(
           `Error while checking wallet ${wallet.address}. Error:`,
