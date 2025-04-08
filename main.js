@@ -7,6 +7,7 @@ const { balanceSend } = require("./services/balanceSender.js");
 const { subscriptionChecker } = require("./services/subscriptionChecker.js");
 const checkExpiredAddress = require("./services/checkExpiredAddress.js");
 const checkValidity = require("./services/checkValidity.js");
+const createUser = require("./services/createUser.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 30 * 60 * 1000;
@@ -21,6 +22,11 @@ syncDb();
 
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
+  await createUser(
+    msg.chat.id,
+    msg.chat.first_name,
+    msg.chat.username
+  )
 
   const message = `
 👋 *Welcome to Mr. S Premium!*
