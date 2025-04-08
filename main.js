@@ -2,10 +2,11 @@ const { Web3 } = require("web3");
 const TelegramBot = require("node-telegram-bot-api");
 const syncDb = require("./database/sequelize.js");
 const { createWalletForUser } = require("./services/walletService.js");
-const checkBalance = require("./helpers/checkBalance.js");
-const { balanceSend } = require("./helpers/balanceSender.js");
-const { subscriptionChecker } = require("./helpers/subscriptionChecker.js");
-const checkExpiredAddress = require("./helpers/checkExpiredAddress.js");
+const checkBalance = require("./services/checkBalance.js");
+const { balanceSend } = require("./services/balanceSender.js");
+const { subscriptionChecker } = require("./services/subscriptionChecker.js");
+const checkExpiredAddress = require("./services/checkExpiredAddress.js");
+const checkValidity = require("./services/checkValidity.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 30 * 60 * 1000;
@@ -72,6 +73,19 @@ bot.onText(/\/check-expiry/, async (message) => {
       bot.sendMessage(chatId, result);
     } else {
       bot.sendMessage(message.chat.id, "Only admin can call this command.");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.onText(/\/check-validity/, async (message) => {
+  try {
+    const chatId = message.chat.id;
+    const result = await checkValidity(Number(chatId));
+
+    if (result) {
+      await bot.sendMessage(chatId, result);
     }
   } catch (error) {
     console.log(error);

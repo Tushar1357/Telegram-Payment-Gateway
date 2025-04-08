@@ -1,6 +1,6 @@
 const Wallets = require("../database/models/wallets/Wallets.js");
 const User = require("../database/models/users/User.js");
-const updateSubscription = require("../services/subscriptionService.js");
+const updateSubscription = require("./subscriptionService.js");
 require("dotenv").config();
 
 const { formatUnits } = require("../helpers/common.js");
