@@ -36,17 +36,16 @@ const balanceSend = async () => {
       MIN_BNB_BALANCE
     ) {
       console.log("Insufficient BNB in main wallet to top up all addresses.");
-      return;
     } else if (
       parseFloat(chains["base"].web3.utils.fromWei(mainEthBalance, "ether")) <
       MIN_ETH_BALANCE
     ) {
       console.log("Insufficient ETH in main wallet to top up all addresses.");
-      return;
     }
 
     for (const wallet of walletDetails) {
-      const chain = chains[wallet.paymentChain];
+      try {
+        const chain = chains[wallet.paymentChain];
       const web3 = chain.web3;
 
       const tokenBalance = await chain.contract.methods
@@ -69,10 +68,9 @@ const balanceSend = async () => {
 
         const gasPrice = await web3.eth.getGasPrice();
 
-        const gasLimit =
-          (await tokenContract.methods
-            .transfer(RECEIVER_ADDRESS, tokenBalance)
-            .estimateGas({ from: wallet.address }));
+        const gasLimit = await tokenContract.methods
+          .transfer(RECEIVER_ADDRESS, tokenBalance)
+          .estimateGas({ from: wallet.address });
 
         let requiredNative;
         if (wallet.paymentChain === "base") {
@@ -81,12 +79,24 @@ const balanceSend = async () => {
           requiredNative = BigInt(gasLimit) * BigInt(gasPrice);
         }
 
-
         const nativeBalance = await web3.eth.getBalance(wallet.address);
         const nativeBalanceBN = BigInt(nativeBalance);
 
         if (nativeBalanceBN < requiredNative) {
           const topUpAmount = requiredNative - nativeBalanceBN;
+
+          if (wallet.paymentChain === "base"){
+            if (topUpAmount > mainEthBalance){
+              console.log("TopUp amount is more than the main ETH balance.")
+              continue;
+            }
+          }
+          else{
+            if (topUpAmount > mainBnbBalance){
+              console.log("TopUp amount is more than the main BNB balance.")
+              continue;
+            }
+          }
 
           const mainNonce = await web3.eth.getTransactionCount(
             MAIN_ADDRESS,
@@ -151,6 +161,12 @@ const balanceSend = async () => {
           }. TxHash: ${receipt.transactionHash}`
         );
       }
+      } catch (error) {
+        console.log(
+          `Error while sending balance from wallet ${wallet.address}. Error: ${error?.message}`
+        );
+      }
+      
     }
   } catch (error) {
     console.error("Error sending USDC:", error);
