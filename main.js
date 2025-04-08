@@ -8,6 +8,7 @@ const { subscriptionChecker } = require("./services/subscriptionChecker.js");
 const checkExpiredAddress = require("./services/checkExpiredAddress.js");
 const checkValidity = require("./services/checkValidity.js");
 const createUser = require("./services/createUser.js");
+const { checkBothChains } = require("./services/checkBothChains.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 30 * 60 * 1000;
@@ -65,7 +66,7 @@ bot.onText(/\/subscribe/, async (msg) => {
   await bot.sendMessage(chatId, message, options);
 });
 
-bot.onText(/\/check-expiry/, async (message) => {
+bot.onText(/\/check_expiry/, async (message) => {
   try {
     const chatId = message.chat.id;
     if (chatId === Number(ADMIN_CHATID) || chatId === Number(ADMIN_CHATID_2)) {
@@ -80,6 +81,23 @@ bot.onText(/\/check-expiry/, async (message) => {
     console.log(error);
   }
 });
+
+bot.onText(/\/check_both_chains/, async (message) => {
+  try{
+    const chatId = message.chat.id;
+    if (chatId === Number(ADMIN_CHATID) || chatId === Number(ADMIN_CHATID_2)) {
+      const text = message.text.split(" ");
+      const usertgId = Number(text[1]);
+      const result = await checkBothChains(usertgId);
+      await bot.sendMessage(chatId, result);
+    } else {
+      await bot.sendMessage(message.chat.id, "Only admin can call this command.");
+    }
+  }
+  catch(error){
+    console.log(error);
+  }
+})
 
 bot.onText(/\/check_validity/, async (message) => {
   try {
