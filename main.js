@@ -79,7 +79,7 @@ bot.onText(/\/check-expiry/, async (message) => {
   }
 });
 
-bot.onText(/\/check-validity/, async (message) => {
+bot.onText(/\/check_validity/, async (message) => {
   try {
     const chatId = message.chat.id;
     const result = await checkValidity(Number(chatId));
