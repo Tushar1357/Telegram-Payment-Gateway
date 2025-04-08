@@ -176,8 +176,8 @@ const balanceSend = async () => {
             }. TxHash: ${receipt.transactionHash}`
           );
 
-          await new Promise((r) => setTimeout(r, 500));
         }
+        await new Promise((r) => setTimeout(r, 500));
       } catch (error) {
         console.log(
           `Error while sending balance from wallet ${wallet.address}. Error: ${error?.message}`

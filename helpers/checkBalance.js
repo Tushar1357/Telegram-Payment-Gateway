@@ -102,6 +102,7 @@ const checkBalance = async (bot) => {
             }
           );
         }
+        await new Promise((r) => setTimeout(r, 200));
       } catch (error) {
         console.log(
           `Error while checking wallet ${wallet.address}. Error:`,
