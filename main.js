@@ -11,6 +11,7 @@ const createUser = require("./services/createUser.js");
 const { checkBothChains } = require("./services/checkBothChains.js");
 const { MIN_AMOUNT } = require("./configs/common.js");
 
+const channelchatId = process.env.CHATID;
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 10 * 60 * 1000;
 const SUBSCRIPTION_CHECK_INTERVAL = 10 * 60 * 1000;
@@ -74,6 +75,39 @@ bot.onText(/\/check_expiry/, async (message) => {
       const usertgId = Number(text[1]);
       const result = await checkExpiredAddress(usertgId);
       await bot.sendMessage(chatId, result);
+    } else {
+      await bot.sendMessage(
+        message.chat.id,
+        "Only admin can call this command."
+      );
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+bot.onText(/\/create_invite_link/, async (message) => {
+  try {
+    const chatId = message.chat.id;
+    if (chatId === Number(ADMIN_CHATID)) {
+      const text = message.text.split(" ");
+      const usertgId = Number(text[1]);
+      const channelLink = await bot.createChatInviteLink(channelchatId, {
+        member_limit: 1,
+        expire_date: Math.floor(Date.now() / 1000) + 60 * 60,
+      });
+      bot
+        .sendMessage(
+          usertgId,
+          `Here is your new invite Link\n\n🔗 *Access the Channel:*\n[Click here to join](${channelLink.invite_link})\n\nLink is valid for 1 hour.`,
+          {
+            parse_mode: "Markdown",
+            disable_web_page_preview: true,
+          }
+        )
+        .catch((error) =>
+          console.log("Error while creating invite link", error?.message)
+        );
     } else {
       await bot.sendMessage(
         message.chat.id,
@@ -208,9 +242,15 @@ bot.on("callback_query", async (query) => {
 });
 
 bot.onText(/\/support/, (message) => {
-  bot.sendMessage(message.chat.id,"Please contact support at @Skelter10 or @MrBean000.").catch(error => console.log("Error while sending support message",error?.message))
-})
-
+  bot
+    .sendMessage(
+      message.chat.id,
+      "Please contact support at @Skelter10 or @MrBean000."
+    )
+    .catch((error) =>
+      console.log("Error while sending support message", error?.message)
+    );
+});
 
 setInterval(() => {
   checkBalance(bot);
