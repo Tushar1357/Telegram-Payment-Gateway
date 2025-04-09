@@ -142,10 +142,12 @@ bot.on("callback_query", async (query) => {
       );
     } catch (err) {
       console.error("Wallet creation failed:", err);
-      return bot.sendMessage(
-        chatId,
-        "⚠️ Failed to create wallet. Please try again later."
-      ).catch(error => console.log(error));
+      return bot
+        .sendMessage(
+          chatId,
+          "⚠️ Failed to create wallet. Please try again later."
+        )
+        .catch((error) => console.log(error));
     }
 
     const { status, address, createdAt } = wallet;
@@ -204,7 +206,6 @@ bot.on("callback_query", async (query) => {
     );
   }
 });
-
 
 
 setInterval(() => {

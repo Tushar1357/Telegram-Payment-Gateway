@@ -40,12 +40,19 @@ const subscriptionChecker = async (bot) => {
           } else {
             await bot.banChatMember(chatId, user.tgId);
             await bot.unbanChatMember(chatId, user.tgId);
-            bot.sendMessage(
-              user.tgId,
-              `❗️ Your subscription expired on ${new Date(
-                expiration
-              ).toUTCString()}.\nPlease renew to continue using our services.\nThanks!`
-            ).catch(error => console.log("Error while sending subscription expiry. Error:",error?.message));
+            bot
+              .sendMessage(
+                user.tgId,
+                `❗️ Your subscription expired on ${new Date(
+                  expiration
+                ).toUTCString()}.\nPlease renew to continue using our services.\nThanks!`
+              )
+              .catch((error) =>
+                console.log(
+                  "Error while sending subscription expiry. Error:",
+                  error?.message
+                )
+              );
           }
 
           continue;
@@ -56,12 +63,19 @@ const subscriptionChecker = async (bot) => {
           expiration - now > 0 &&
           !user.reminderSent
         ) {
-          bot.sendMessage(
-            user.tgId,
-            `⏳ Reminder: Your subscription will expire on ${new Date(
-              expiration
-            ).toUTCString()}.\nPlease renew within 5 days to avoid service interruption.`
-          ).catch(error => console.log("Error while sending 5 day reminder. Error",error?.message));
+          bot
+            .sendMessage(
+              user.tgId,
+              `⏳ Reminder: Your subscription will expire on ${new Date(
+                expiration
+              ).toUTCString()}.\nPlease renew within 5 days to avoid service interruption.`
+            )
+            .catch((error) =>
+              console.log(
+                "Error while sending 5 day reminder. Error",
+                error?.message
+              )
+            );
           await User.update(
             {
               reminderSent: true,
