@@ -122,6 +122,7 @@ bot.on("callback_query", async (query) => {
     const chatId = query.message.chat.id;
     const choice = query.data;
 
+    await bot.answerCallbackQuery(query.id);
     if (!["bsc", "base"].includes(choice)) {
       await bot.sendMessage(
         chatId,
@@ -129,7 +130,6 @@ bot.on("callback_query", async (query) => {
       );
       return;
     }
-    await bot.answerCallbackQuery(query.id);
     const chainLabel = choice === "bsc" ? "BSC" : "BASE";
 
     let wallet;
@@ -145,7 +145,7 @@ bot.on("callback_query", async (query) => {
       return bot.sendMessage(
         chatId,
         "⚠️ Failed to create wallet. Please try again later."
-      );
+      ).catch(error => console.log(error));
     }
 
     const { status, address, createdAt } = wallet;
