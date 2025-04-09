@@ -10,8 +10,8 @@ const checkValidity = require("./services/checkValidity.js");
 const createUser = require("./services/createUser.js");
 const { checkBothChains } = require("./services/checkBothChains.js");
 const { MIN_AMOUNT } = require("./configs/common.js");
+const createInviteLink = require("./services/createInviteLink.js");
 
-const channelchatId = process.env.CHATID;
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 10 * 60 * 1000;
 const SUBSCRIPTION_CHECK_INTERVAL = 10 * 60 * 1000;
@@ -92,24 +92,26 @@ bot.onText(/\/create_invite_link/, async (message) => {
     if (chatId === Number(ADMIN_CHATID)) {
       const text = message.text.split(" ");
       const usertgId = Number(text[1]);
-      const channelLink = await bot.createChatInviteLink(channelchatId, {
-        member_limit: 1,
-        expire_date: Math.floor(Date.now() / 1000) + 60 * 60,
-      });
-      bot
-        .sendMessage(
-          usertgId,
-          `Here is your new invite Link\n\n🔗 *Access the Channel:*\n[Click here to join](${channelLink.invite_link})\n\nLink is valid for 1 hour.`,
-          {
+      const [result, status] = await createInviteLink(usertgId, bot);
+      if (status) {
+        bot
+          .sendMessage(usertgId, result, {
             parse_mode: "Markdown",
             disable_web_page_preview: true,
-          }
-        )
-        .catch((error) =>
-          console.log("Error while creating invite link", error?.message)
-        );
+          })
+          .catch((error) =>
+            console.log("Error while creating invite link", error?.message)
+          );
+      }
+      else{
+        return bot.sendMessage(chatId,result).catch(error => console.log(error?.message))
+      }
 
-        bot.sendMessage(chatId,"Link has been sent to the user.")
+      bot
+        .sendMessage(chatId, "Link has been sent to the user.")
+        .catch((error) =>
+          console.log("Error while sending message to admin", error?.message)
+        );
     } else {
       await bot.sendMessage(
         message.chat.id,
