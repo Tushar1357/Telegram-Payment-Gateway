@@ -100,7 +100,7 @@ const checkBalance = async (bot) => {
           if (!user.subscriptionStatus) {
             const channelLink = await bot.createChatInviteLink(chatId, {
               member_limit: 1,
-              expire_date: Math.floor(Date.now() / 1000) + 60 * 60,
+              expire_date: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
             });
             bot
               .sendMessage(
