@@ -9,6 +9,8 @@ const chains = require("../configs/chains.js");
 const TIMEOUT = 30 * 60 * 1000;
 const REMINDER_TIME = 5 * 60 * 1000;
 
+const ADMIN_CHATID = process.env.ADMIN_CHATID;
+const ADMIN_CHATID_2 = process.env.ADMIN_CHATID_2;
 const chatId = process.env.CHATID;
 
 const checkBalance = async (bot) => {
@@ -121,6 +123,25 @@ const checkBalance = async (bot) => {
                   error?.message
                 )
               );
+
+            bot
+              .sendMessage(
+                ADMIN_CHATID,
+                `🎉 *New Subscription Alert!*\n\n${user.tgName} just bought premium subscription for 1 month.`,
+                {
+                  parse_mode: "Markdown",
+                }
+              )
+              .catch((error) => console.log(error?.message));
+            bot
+              .sendMessage(
+                ADMIN_CHATID_2,
+                `🎉 *New Subscription Alert!*\n\n${user.tgName} just bought premium subscription for 1 month.`,
+                {
+                  parse_mode: "Markdown",
+                }
+              )
+              .catch((error) => console.log(error?.message));
           } else {
             bot
               .sendMessage(
@@ -138,6 +159,24 @@ const checkBalance = async (bot) => {
                   error?.message
                 )
               );
+            bot
+              .sendMessage(
+                ADMIN_CHATID,
+                `🎉 *Renewal Alert!*\n\n${user.tgName} just renewed premium subscription for 1 month.`,
+                {
+                  parse_mode: "Markdown",
+                }
+              )
+              .catch((error) => console.log(error?.message));
+            bot
+              .sendMessage(
+                ADMIN_CHATID_2,
+                `🎉 *Renewal Alert!*\n\n${user.tgName} just renewed premium subscription for 1 month.`,
+                {
+                  parse_mode: "Markdown",
+                }
+              )
+              .catch((error) => console.log(error?.message));
           }
         }
         await new Promise((r) => setTimeout(r, 100));
