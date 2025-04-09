@@ -17,7 +17,7 @@ const updateSubscription = async (user) => {
       {
         expiration: new Date(newExpirationTime),
         subscriptionStatus: true,
-        reminderSent: false
+        reminderSent: false,
       },
       {
         where: {
@@ -30,7 +30,7 @@ const updateSubscription = async (user) => {
       console.log("Could not update expiration time for user:", user.id);
     }
 
-    return newExpirationTime
+    return newExpirationTime;
   } catch (error) {
     console.error("Error in updateSubscription:", error);
     return null;

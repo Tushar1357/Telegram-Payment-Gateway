@@ -97,29 +97,48 @@ const checkBalance = async (bot) => {
             );
           }
 
-          const channelLink = await bot.createChatInviteLink(chatId, {
-            member_limit: 1,
-            expire_date: Math.floor(Date.now() / 1000) + 60 * 60,
-          });
-          bot
-            .sendMessage(
-              user.tgId,
-              `🎉 *Subscription Activated!*\n\n✅ You’ve successfully purchased your subscription.\n\n🔗 *Access the Channel:*\n[Click here to join](${
-                channelLink.invite_link
-              })\n\n🕒 *Subscription Valid Till:*\n${new Date(
-                expirationTime
-              ).toUTCString()}\n\nThank you for subscribing! If you face any issues, feel free to reach out to @Skelter10 or @MrBean000.`,
-              {
-                parse_mode: "Markdown",
-                disable_web_page_preview: true,
-              }
-            )
-            .catch((error) =>
-              console.log(
-                "Error while sending subscription activation message. Error",
-                error?.message
+          if (!user.subscriptionStatus) {
+            const channelLink = await bot.createChatInviteLink(chatId, {
+              member_limit: 1,
+              expire_date: Math.floor(Date.now() / 1000) + 60 * 60,
+            });
+            bot
+              .sendMessage(
+                user.tgId,
+                `🎉 *Subscription Activated!*\n\n✅ You’ve successfully purchased your subscription.\n\n🔗 *Access the Channel:*\n[Click here to join](${
+                  channelLink.invite_link
+                })\n\n🕒 *Subscription Valid Till:*\n${new Date(
+                  expirationTime
+                ).toUTCString()}\n\nThank you for subscribing! If you face any issues, feel free to reach out to @Skelter10 or @MrBean000.`,
+                {
+                  parse_mode: "Markdown",
+                  disable_web_page_preview: true,
+                }
               )
-            );
+              .catch((error) =>
+                console.log(
+                  "Error while sending subscription activation message. Error",
+                  error?.message
+                )
+              );
+          } else {
+            bot
+              .sendMessage(
+                user.tgId,
+                `✅ Thanks for extending your subscription.\n\nYour subscription has been extended by 30 days.\n\n🕒 *Subscription Valid Till:*\n${new Date(
+                  expirationTime
+                ).toUTCString()}`,
+                {
+                  parse_mode: "Markdown",
+                }
+              )
+              .catch((error) =>
+                console.log(
+                  "Error while sending extending message. Error",
+                  error?.message
+                )
+              );
+          }
         }
         await new Promise((r) => setTimeout(r, 100));
       } catch (error) {
