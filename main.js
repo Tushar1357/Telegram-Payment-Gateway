@@ -108,6 +108,8 @@ bot.onText(/\/create_invite_link/, async (message) => {
         .catch((error) =>
           console.log("Error while creating invite link", error?.message)
         );
+
+        bot.sendMessage(chatId,"Link has been sent to the user.")
     } else {
       await bot.sendMessage(
         message.chat.id,
