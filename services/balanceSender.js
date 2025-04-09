@@ -2,9 +2,15 @@ const Wallets = require("../database/models/wallets/Wallets.js");
 const { w3 } = require("../configs/web3.js");
 const { decrypt } = require("../utils/cryptoUtils.js");
 require("dotenv").config();
-const {MIN_AMOUNT,MIN_BNB_BALANCE,MIN_ETH_BALANCE,MIN_ETH_TOPUP} = require("../configs/common.js")
+const {
+  MIN_AMOUNT,
+  MIN_BNB_BALANCE,
+  MIN_ETH_BALANCE,
+  MIN_ETH_TOPUP,
+} = require("../configs/common.js");
 const { formatUnits } = require("../helpers/common.js");
 const chains = require("../configs/chains.js");
+const { parseUnits } = require("ethers");
 
 const RECEIVER_ADDRESS = process.env.RECEIVER_ADDRESS;
 const MAIN_PRIVATE_KEY = process.env.MAIN_PRIVATE_KEY;
@@ -33,31 +39,40 @@ const balanceSend = async () => {
     const formattedmainEthBalance = parseFloat(
       chains["base"].web3.utils.fromWei(mainEthBalance, "ether")
     );
-    if (
-      parseFloat(chains["bsc"].web3.utils.fromWei(mainBnbBalance, "ether")) <
-      MIN_BNB_BALANCE
-    ) {
+
+    if (formattedmainBnbBalance < MIN_BNB_BALANCE) {
       console.log("Insufficient BNB in main wallet to top up all addresses.");
-    } else if (
-      parseFloat(chains["base"].web3.utils.fromWei(mainEthBalance, "ether")) <
-      MIN_ETH_BALANCE
-    ) {
+    }
+    if (formattedmainEthBalance < MIN_ETH_BALANCE) {
       console.log("Insufficient ETH in main wallet to top up all addresses.");
     }
 
+    const mainNonces = {
+      base: await chains["base"].web3.eth.getTransactionCount(
+        MAIN_ADDRESS,
+        "pending"
+      ),
+      bsc: await chains["bsc"].web3.eth.getTransactionCount(
+        MAIN_ADDRESS,
+        "pending"
+      ),
+    };
+
     for (const wallet of walletDetails) {
       try {
-        if (wallet.paymentChain === "base") {
-          if (formattedmainEthBalance < MIN_ETH_BALANCE) {
-            continue;
-          }
-        } else {
-          if (formattedmainBnbBalance < MIN_BNB_BALANCE) {
-            continue;
-          }
-        }
         const chain = chains[wallet.paymentChain];
         const web3 = chain.web3;
+
+        if (
+          wallet.paymentChain === "base" &&
+          formattedmainEthBalance < MIN_ETH_BALANCE
+        )
+          continue;
+        if (
+          wallet.paymentChain === "bsc" &&
+          formattedmainBnbBalance < MIN_BNB_BALANCE
+        )
+          continue;
 
         const tokenBalance = await chain.contract.methods
           .balanceOf(wallet.address)
@@ -77,9 +92,7 @@ const balanceSend = async () => {
           const data = tokenContract.methods
             .transfer(RECEIVER_ADDRESS, tokenBalance)
             .encodeABI();
-
           const gasPrice = await web3.eth.getGasPrice();
-
           const gasLimit = await tokenContract.methods
             .transfer(RECEIVER_ADDRESS, tokenBalance)
             .estimateGas({ from: wallet.address });
@@ -96,32 +109,32 @@ const balanceSend = async () => {
 
           if (nativeBalanceBN < requiredNative) {
             const topUpAmount = requiredNative - nativeBalanceBN;
+            const mainChainBalance =
+              wallet.paymentChain === "base"
+                ? BigInt(mainEthBalance)
+                : BigInt(mainBnbBalance);
 
-            if (wallet.paymentChain === "base") {
-              if (topUpAmount > mainEthBalance) {
-                console.log("TopUp amount is more than the main ETH balance.");
-                continue;
-              }
-            } else {
-              if (topUpAmount > mainBnbBalance) {
-                console.log("TopUp amount is more than the main BNB balance.");
-                continue;
-              }
+            if (topUpAmount > mainChainBalance) {
+              console.log(
+                `TopUp amount is more than the main ${wallet.paymentChain.toUpperCase()} balance.`
+              );
+              continue;
             }
 
-            const mainNonce = await web3.eth.getTransactionCount(
-              MAIN_ADDRESS,
-              "latest"
-            );
-
-            const topUpTx = {
+            let topUpTx = {
               from: MAIN_ADDRESS,
               to: wallet.address,
               value: topUpAmount.toString(),
               gas: 21000,
               gasPrice,
-              nonce: mainNonce,
+              nonce: mainNonces[wallet.paymentChain],
             };
+
+            if (wallet.paymentChain === "base") {
+              topUpTx.maxFeePerGas = parseUnits("0.1", "gwei");
+              topUpTx.maxPriorityFeePerGas = parseUnits("0.1", "gwei");
+              delete topUpTx.gasPrice;
+            }
 
             const signedTopUpTx = await web3.eth.accounts.signTransaction(
               topUpTx,
@@ -130,24 +143,23 @@ const balanceSend = async () => {
             const topUpReceipt = await web3.eth.sendSignedTransaction(
               signedTopUpTx.rawTransaction
             );
-
             console.log(
               `✅ Sent ${web3.utils.fromWei(
                 topUpAmount.toString(),
                 "ether"
-              )} ETH/BNB to ${wallet.address} for gas. TxHash: ${
-                topUpReceipt.transactionHash
-              }`
+              )} to ${wallet.address}. TxHash: ${topUpReceipt.transactionHash}`
             );
+
+            mainNonces[wallet.paymentChain]++; // increment nonce
             await new Promise((resolve) => setTimeout(resolve, 3000));
           }
 
           const nonce = await web3.eth.getTransactionCount(
             wallet.address,
-            "latest"
+            "pending"
           );
 
-          const tx = {
+          let tx = {
             from: wallet.address,
             to: chain.tokenAddress,
             data,
@@ -155,6 +167,12 @@ const balanceSend = async () => {
             gasPrice,
             nonce,
           };
+
+          if (wallet.paymentChain === "base") {
+            tx.maxFeePerGas = parseUnits("0.1", "gwei");
+            tx.maxPriorityFeePerGas = parseUnits("0.1", "gwei");
+            delete tx.gasPrice;
+          }
 
           const signedTx = await account.signTransaction(tx);
           const receipt = await web3.eth.sendSignedTransaction(
@@ -171,8 +189,8 @@ const balanceSend = async () => {
               wallet.address
             }. TxHash: ${receipt.transactionHash}`
           );
-
         }
+
         await new Promise((r) => setTimeout(r, 500));
       } catch (error) {
         console.log(

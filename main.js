@@ -12,7 +12,7 @@ const { checkBothChains } = require("./services/checkBothChains.js");
 const { MIN_AMOUNT } = require("./configs/common.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
-const BALANCE_SEND_INTERVAL = 30 * 60 * 1000;
+const BALANCE_SEND_INTERVAL = 10 * 60 * 1000;
 const SUBSCRIPTION_CHECK_INTERVAL = 10 * 60 * 1000;
 const ADMIN_CHATID = process.env.ADMIN_CHATID;
 const ADMIN_CHATID_2 = process.env.ADMIN_CHATID_2;
