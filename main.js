@@ -211,9 +211,6 @@ bot.onText(/\/support/, (message) => {
   bot.sendMessage(message.chat.id,"Please contact support at @Skelter10 or @MrBean000.").catch(error => console.log("Error while sending support message",error?.message))
 })
 
-bot.on("message",(message) => {
-  bot.sendMessage(message.chat.id, "Invalid command.").catch(error => console.log(error?.message))
-})
 
 setInterval(() => {
   checkBalance(bot);
