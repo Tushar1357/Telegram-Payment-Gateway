@@ -6,7 +6,11 @@ const { formatUnits } = require("../helpers/common.js");
 const { MIN_AMOUNT, MIN_TOLERANCE } = require("../configs/common.js");
 const updateSubscription = require("./subscriptionService.js");
 
-const checkToleranceAmount = async (tgId, bot,ADMIN_CHATID, ADMIN_CHATID_2) => {
+const ADMIN_CHATID = process.env.ADMIN_CHATID;
+const ADMIN_CHATID_2 = process.env.ADMIN_CHATID_2;
+const chatId = process.env.CHATID;
+
+const checkToleranceAmount = async (tgId, bot) => {
   try {
     const user = await User.findOne({
       where: {

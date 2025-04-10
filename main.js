@@ -163,7 +163,7 @@ bot.onText(/\/check_tolerance/, async (message) => {
     if (chatId === Number(ADMIN_CHATID)) {
       const text = message.text.split(" ");
       const usertgId = Number(text[1]);
-      const result = await checkToleranceAmount(usertgId, bot,ADMIN_CHATID,ADMIN_CHATID_2);
+      const result = await checkToleranceAmount(usertgId, bot);
       if (result) {
         bot.sendMessage(chatId, result)
       }
