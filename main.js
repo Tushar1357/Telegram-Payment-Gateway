@@ -12,6 +12,7 @@ const { checkBothChains } = require("./services/checkBothChains.js");
 const { MIN_AMOUNT } = require("./configs/common.js");
 const createInviteLink = require("./services/createInviteLink.js");
 const checkToleranceAmount = require("./services/checkToleranceamount.js");
+const getTgId = require("./services/getTgId.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 10 * 60 * 1000;
@@ -165,7 +166,7 @@ bot.onText(/\/check_tolerance/, async (message) => {
       const usertgId = Number(text[1]);
       const result = await checkToleranceAmount(usertgId, bot);
       if (result) {
-        bot.sendMessage(chatId, result)
+        bot.sendMessage(chatId, result);
       }
     } else {
       await bot.sendMessage(
@@ -197,6 +198,11 @@ bot.on("message", async (message) => {
       } else {
         bot.sendMessage(chatId, "Couldn't extract forwarded user ID.");
       }
+    } else if (message?.forward_sender_name) {
+      const result = await getTgId(message.forward_sender_name);
+      bot.sendMessage(chatId, result, {
+        parse_mode: "Markdown",
+      });
     }
   } catch (error) {
     console.error("Error handling forwarded message:", error);
