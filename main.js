@@ -13,6 +13,7 @@ const { MIN_AMOUNT } = require("./configs/common.js");
 const createInviteLink = require("./services/createInviteLink.js");
 const checkToleranceAmount = require("./services/checkToleranceamount.js");
 const getTgId = require("./services/getTgId.js");
+const sendMessage = require("./services/sendMessage.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 10 * 60 * 1000;
@@ -176,6 +177,37 @@ bot.onText(/\/check_tolerance/, async (message) => {
     }
   } catch (error) {
     console.log(error?.message);
+  }
+});
+
+bot.onText(/^\/send_message (.+)/s, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const textToSend = match[1];
+
+  if (chatId === Number(ADMIN_CHATID)) {
+    try {
+      await bot.sendMessage(chatId, textToSend, {
+        parse_mode: "HTML",
+      });
+    } catch (error) {
+      console.error("Error sending message:", error?.message);
+      bot.sendMessage(chatId, "❌ Failed to send message.");
+    }
+  }
+});
+
+bot.onText(/^\/send_message_all (.+)/s, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const textToSend = match[1];
+
+  if (chatId === Number(ADMIN_CHATID)) {
+    try {
+      await sendMessage(bot, textToSend);
+      bot.sendMessage(chatId, "Message has been sent to all users.");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      bot.sendMessage(chatId, "❌ Failed to send message.");
+    }
   }
 });
 
