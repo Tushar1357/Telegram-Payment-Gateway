@@ -155,6 +155,22 @@ bot.onText(/\/check_validity/, async (message) => {
   }
 });
 
+bot.on("message", async (message) => {
+  try{
+    if (message?.forward_from && message?.forward_date){
+      const chatId = message.chat.id
+      if (chatId === Number(ADMIN_CHATID)){
+        bot.sendMessage(chatId,`${message.forward_from?.first_name} - \`${message.forward_from?.id}\``,{
+          parse_mode: 'Markdown'
+        })
+      }
+    }
+  }
+  catch(error){
+    console.log(error)
+  }
+})
+
 bot.on("callback_query", async (query) => {
   try {
     const chatId = query.message.chat.id;

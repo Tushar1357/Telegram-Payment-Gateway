@@ -13,6 +13,12 @@ const createInviteLink = async (tgId, bot) => {
       return ["No user found with this id", false];
     }
 
+    const details = await bot.getChatMember(channelchatId, tgId)
+    
+    if (details.status === "member"){
+      return ["User has already joined the channel", false]
+    }
+
     if (user.subscriptionStatus && user.expiration) {
       const expiration = new Date(user.expiration).getTime();
       if (expiration - Date.now() >= 60 * 60 * 1000) {
