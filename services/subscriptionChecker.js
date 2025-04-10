@@ -39,7 +39,6 @@ const subscriptionChecker = async (bot) => {
             );
           } else {
             await bot.banChatMember(chatId, user.tgId);
-            await bot.unbanChatMember(chatId, user.tgId);
             bot
               .sendMessage(
                 user.tgId,

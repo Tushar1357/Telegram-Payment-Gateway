@@ -100,6 +100,7 @@ const checkBalance = async (bot) => {
           }
 
           if (!user.subscriptionStatus) {
+            await bot.unbanChatMember(chatId, user.tgId);
             const channelLink = await bot.createChatInviteLink(chatId, {
               member_limit: 1,
               expire_date: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
