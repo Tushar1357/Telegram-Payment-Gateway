@@ -18,7 +18,7 @@ const checkValidity = async (tgId) => {
     const expirationTime = expiration.getTime();
 
     if (now > expirationTime) {
-      return `Plan has already expired on ${expiration}. Please click on /subscribe to renew your plan.`;
+      return `Plan has already expired on ${expiration.toDateString()}. Please click on /subscribe to renew your plan.`;
     }
 
     const remainingDays = Math.max(
