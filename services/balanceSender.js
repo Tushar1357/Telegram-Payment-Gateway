@@ -7,6 +7,7 @@ const {
   MIN_BNB_BALANCE,
   MIN_ETH_BALANCE,
   MIN_ETH_TOPUP,
+  MIN_TOLERANCE,
 } = require("../configs/common.js");
 const { formatUnits } = require("../helpers/common.js");
 const chains = require("../configs/chains.js");
@@ -79,7 +80,7 @@ const balanceSend = async () => {
           .call();
         const tokenBalanceFormatted = formatUnits(tokenBalance, chain.decimals);
 
-        if (parseFloat(tokenBalanceFormatted) >= MIN_AMOUNT) {
+        if (parseFloat(tokenBalanceFormatted) >= MIN_TOLERANCE) {
           console.log(
             `🔍 Preparing to send ${tokenBalanceFormatted} USDC from ${wallet.address} (${wallet.paymentChain})`
           );

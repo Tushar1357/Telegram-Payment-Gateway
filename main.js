@@ -11,6 +11,7 @@ const createUser = require("./services/createUser.js");
 const { checkBothChains } = require("./services/checkBothChains.js");
 const { MIN_AMOUNT } = require("./configs/common.js");
 const createInviteLink = require("./services/createInviteLink.js");
+const checkToleranceAmount = require("./services/checkToleranceamount.js");
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 10 * 60 * 1000;
@@ -102,9 +103,10 @@ bot.onText(/\/create_invite_link/, async (message) => {
           .catch((error) =>
             console.log("Error while creating invite link", error?.message)
           );
-      }
-      else{
-        return bot.sendMessage(chatId,result).catch(error => console.log(error?.message))
+      } else {
+        return bot
+          .sendMessage(chatId, result)
+          .catch((error) => console.log(error?.message));
       }
 
       bot
@@ -155,21 +157,51 @@ bot.onText(/\/check_validity/, async (message) => {
   }
 });
 
+bot.onText(/\/check_tolerance/, async (message) => {
+  try {
+    const chatId = message.chat.id;
+    if (chatId === Number(ADMIN_CHATID)) {
+      const text = message.text.split(" ");
+      const usertgId = Number(text[1]);
+      const result = await checkToleranceAmount(usertgId, bot,ADMIN_CHATID,ADMIN_CHATID_2);
+      if (result) {
+        bot.sendMessage(chatId, result)
+      }
+    } else {
+      await bot.sendMessage(
+        message.chat.id,
+        "Only admin can call this command."
+      );
+    }
+  } catch (error) {
+    console.log(error?.message);
+  }
+});
+
 bot.on("message", async (message) => {
-  try{
-    if (message?.forward_from && message?.forward_date){
-      const chatId = message.chat.id
-      if (chatId === Number(ADMIN_CHATID)){
-        bot.sendMessage(chatId,`${message.forward_from?.first_name} - \`${message.forward_from?.id}\``,{
-          parse_mode: 'Markdown'
-        })
+  try {
+    const chatId = message.chat.id;
+
+    if (
+      message?.forward_from &&
+      message?.forward_date &&
+      chatId === Number(ADMIN_CHATID)
+    ) {
+      const firstName = message.forward_from.first_name || "Unknown";
+      const userId = message.forward_from.id;
+
+      if (userId) {
+        bot.sendMessage(chatId, `${firstName} - \`${userId}\``, {
+          parse_mode: "Markdown",
+        });
+      } else {
+        bot.sendMessage(chatId, "Couldn't extract forwarded user ID.");
       }
     }
+  } catch (error) {
+    console.error("Error handling forwarded message:", error);
   }
-  catch(error){
-    console.log(error)
-  }
-})
+});
 
 bot.on("callback_query", async (query) => {
   try {

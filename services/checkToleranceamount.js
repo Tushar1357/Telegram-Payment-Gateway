@@ -1,76 +1,35 @@
 const Wallets = require("../database/models/wallets/Wallets.js");
 const User = require("../database/models/users/User.js");
-const updateSubscription = require("./subscriptionService.js");
 require("dotenv").config();
-const { MIN_AMOUNT, MIN_TOLERANCE } = require("../configs/common.js");
-const { formatUnits } = require("../helpers/common.js");
 const chains = require("../configs/chains.js");
+const { formatUnits } = require("../helpers/common.js");
+const { MIN_AMOUNT, MIN_TOLERANCE } = require("../configs/common.js");
+const updateSubscription = require("./subscriptionService.js");
 
-const TIMEOUT = 30 * 60 * 1000;
-const REMINDER_TIME = 5 * 60 * 1000;
-
-const ADMIN_CHATID = process.env.ADMIN_CHATID;
-const ADMIN_CHATID_2 = process.env.ADMIN_CHATID_2;
-const chatId = process.env.CHATID;
-
-const checkBalance = async (bot) => {
+const checkToleranceAmount = async (tgId, bot,ADMIN_CHATID, ADMIN_CHATID_2) => {
   try {
-    const walletDetail = await Wallets.findAll({
+    const user = await User.findOne({
       where: {
-        status: "unpaid",
+        tgId,
       },
     });
+    if (!user) {
+      return "No user found with this telegram Id.";
+    }
+    const wallets = await Wallets.findAll({
+      where: {
+        userId: user.id,
+        status: ["unpaid", "expired"],
+      },
+      order: [["createdAt", "DESC"]],
+    });
 
-    for (const wallet of walletDetail) {
+    if (!wallets || wallets.length === 0) {
+      return "✅ No unpaid or expired wallets found for your account.";
+    }
+
+    for (const wallet of wallets) {
       try {
-        const user = await User.findOne({
-          where: {
-            id: wallet.userId,
-          },
-        });
-
-        if (!user || !user.tgId) {
-          console.log(`No user found for wallet ${wallet.address}`);
-          continue;
-        }
-        const createdAt = new Date(wallet.createdAt).getTime();
-        const time = createdAt + TIMEOUT;
-
-        if (
-          time - Date.now() < REMINDER_TIME &&
-          time - Date.now() > REMINDER_TIME - 15 * 1000
-        ) {
-          bot
-            .sendMessage(
-              user.tgId,
-              `⏰ Reminder: You have 5 minutes left to complete your payment of ${MIN_AMOUNT} USDC (${wallet.paymentChain.toUpperCase()}). Please complete it soon or the address will expire.`
-            )
-            .catch((error) =>
-              console.log(
-                "Error while sending 5 minute reminder. Error:",
-                error?.message
-              )
-            );
-        }
-        if (time < Date.now()) {
-          await Wallets.update(
-            { status: "expired" },
-            { where: { id: wallet.id } }
-          );
-          bot
-            .sendMessage(
-              user.tgId,
-              `Your payment time is over and the wallet address ${wallet.address} has expired. Kindly click on /subscribe to restart the process.`
-            )
-            .catch((error) =>
-              console.log(
-                "Error while sending expiry reminder. Error: ",
-                error?.message
-              )
-            );
-          continue;
-        }
-
         const tokenBalance = await chains[wallet.paymentChain].contract.methods
           .balanceOf(wallet.address)
           .call();
@@ -79,7 +38,7 @@ const checkBalance = async (bot) => {
           chains[wallet.paymentChain].decimals
         );
 
-        if (parseFloat(tokenBalanceFormatted) >= MIN_AMOUNT) {
+        if (parseFloat(tokenBalanceFormatted) >= MIN_TOLERANCE) {
           const result = await Wallets.update(
             {
               status: "paid",
@@ -91,6 +50,7 @@ const checkBalance = async (bot) => {
               },
             }
           );
+
           const expirationTime = await updateSubscription(user);
 
           if (!result) {
@@ -177,19 +137,25 @@ const checkBalance = async (bot) => {
                 }
               )
               .catch((error) => console.log(error?.message));
+
+
           }
+
+          return `Checked all addressess and found ${wallet.address} with min tolerance amount.`
         }
-        await new Promise((r) => setTimeout(r, 100));
       } catch (error) {
         console.log(
-          `Error while checking wallet ${wallet.address}. Error:`,
-          error?.message
+          `Error while checking expired address ${wallet.address}. Error: ${error?.message}`
         );
+        return "Error while checking addresses."; 
       }
     }
+
+    return "No address found with minimum tolerance amount.";
   } catch (error) {
-    console.log(error);
+    console.log("Error while checking expired addresses", error?.message);
+    return "Error while checking addresses.";
   }
 };
 
-module.exports = checkBalance;
+module.exports = checkToleranceAmount;
