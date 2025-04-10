@@ -22,6 +22,7 @@ const createInviteLink = async (tgId, bot) => {
     if (user.subscriptionStatus && user.expiration) {
       const expiration = new Date(user.expiration).getTime();
       if (expiration - Date.now() >= 60 * 60 * 1000) {
+        await bot.unbanChatMember(channelchatId, user.tgId);
         const channelLink = await bot.createChatInviteLink(channelchatId, {
           member_limit: 1,
           expire_date: Math.floor(Date.now() / 1000) + 60 * 60,
