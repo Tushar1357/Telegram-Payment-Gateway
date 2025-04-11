@@ -92,7 +92,7 @@ bot.onText(/\/check_expiry/, async (message) => {
 bot.onText(/\/create_invite_link/, async (message) => {
   try {
     const chatId = message.chat.id;
-    if (chatId === Number(ADMIN_CHATID)) {
+    if (chatId === Number(ADMIN_CHATID) || chatId === Number(ADMIN_CHATID_2)) {
       const text = message.text.split(" ");
       const usertgId = Number(text[1]);
       const [result, status] = await createInviteLink(usertgId, bot);
@@ -218,7 +218,7 @@ bot.on("message", async (message) => {
     if (
       message?.forward_from &&
       message?.forward_date &&
-      chatId === Number(ADMIN_CHATID)
+      (chatId === Number(ADMIN_CHATID) || chatId === Number(ADMIN_CHATID_2))
     ) {
       const firstName = message.forward_from.first_name || "Unknown";
       const userId = message.forward_from.id;
