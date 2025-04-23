@@ -335,8 +335,9 @@ bot.on("new_chat_members", async (request) => {
   try{
     console.log(request)
     const chatId = request.new_chat_member.id;
-    const groupId = -1002397856788
-    const result = await bot.getChatMember(proc,chatId)
+    const groupId = -4608904469
+    const result = await bot.getChatMember(process.env.CHATID,chatId)
+    console.log(result)
     if (result.status !== "member"){
       bot.banChatMember(groupId,chatId)
     }
@@ -346,9 +347,6 @@ bot.on("new_chat_members", async (request) => {
   }
 })
 
-bot.on("message",(mess) => {
-  console.log(mess)
-})
 
 bot.onText(/\/support/, (message) => {
   bot
