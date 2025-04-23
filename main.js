@@ -331,6 +331,25 @@ bot.on("callback_query", async (query) => {
   }
 });
 
+bot.on("new_chat_members", async (request) => {
+  try{
+    console.log(request)
+    const chatId = request.new_chat_member.id;
+    const groupId = -1002397856788
+    const result = await bot.getChatMember(proc,chatId)
+    if (result.status !== "member"){
+      bot.banChatMember(groupId,chatId)
+    }
+  }
+  catch(error){
+    console.log(error?.message)
+  }
+})
+
+bot.on("message",(mess) => {
+  console.log(mess)
+})
+
 bot.onText(/\/support/, (message) => {
   bot
     .sendMessage(
