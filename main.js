@@ -331,22 +331,23 @@ bot.on("callback_query", async (query) => {
   }
 });
 
-bot.on("new_chat_members", async (request) => {
-  try{
+bot.on("chat_join_request", async (request) => {
+  try {
+    const chatId = request.from.id;
+    const groupId = request.chat.id;
+    const constGroupId = -4608904469;
     console.log(request)
-    const chatId = request.new_chat_member.id;
-    const groupId = -4608904469
-    const result = await bot.getChatMember(process.env.CHATID,chatId)
-    console.log(result)
-    if (result.status !== "member"){
-      bot.banChatMember(groupId,chatId)
+    if (groupId === constGroupId) {
+      const result = await bot.getChatMember(process.env.CHATID, chatId);
+      console.log(result);
+      if (result.status === "member") {
+        bot.approveChatJoinRequest(groupId, chatId);
+      }
     }
+  } catch (error) {
+    console.log(error?.message);
   }
-  catch(error){
-    console.log(error?.message)
-  }
-})
-
+});
 
 bot.onText(/\/support/, (message) => {
   bot
