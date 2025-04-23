@@ -342,6 +342,7 @@ bot.on("chat_join_request", async (request) => {
         bot.approveChatJoinRequest(groupId, chatId);
       }
       else{
+        bot.declineChatJoinRequest(groupId,chatId)
         console.log(`${result.user.id} - ${result.user.first_name} ${result.user.last_name}`)
       }
     }
