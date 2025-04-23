@@ -341,6 +341,9 @@ bot.on("chat_join_request", async (request) => {
       if (result.status === "member") {
         bot.approveChatJoinRequest(groupId, chatId);
       }
+      else{
+        console.log(`${result.user.id} - ${result.user.first_name} ${result.user.last_name}`)
+      }
     }
   } catch (error) {
     console.log(error?.message);
