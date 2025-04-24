@@ -340,16 +340,40 @@ bot.on("chat_join_request", async (request) => {
       const result = await bot.getChatMember(process.env.CHATID, chatId);
       if (result.status === "member") {
         bot.approveChatJoinRequest(groupId, chatId);
-      }
-      else{
-        bot.declineChatJoinRequest(groupId,chatId)
-        console.log(`${result.user.id} - ${result.user.first_name} ${result.user.last_name}`)
+      } else {
+        bot.declineChatJoinRequest(groupId, chatId);
+        console.log(
+          `${result.user.id} - ${result.user.first_name} ${result.user.last_name}`
+        );
       }
     }
   } catch (error) {
     console.log(error?.message);
   }
 });
+
+bot.setMyCommands(
+  [
+    { command: "start", description: "Starts the bot" },
+    { command: "subscribe", description: "Select the payment method" },
+    {
+      command: "check_validity",
+      description: "Checks the validity of your subscription",
+    },
+    { command: "support", description: "Contact support team" },
+  ],
+  {
+    scope: {
+      type: "all_private_chats",
+    },
+  }
+);
+
+bot.setMyCommands([],{
+  scope: {
+    type: "all_group_chats"
+  }
+})
 
 bot.onText(/\/support/, (message) => {
   bot
