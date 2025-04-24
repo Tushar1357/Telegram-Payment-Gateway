@@ -352,29 +352,6 @@ bot.on("chat_join_request", async (request) => {
   }
 });
 
-bot.setMyCommands(
-  [
-    { command: "start", description: "Starts the bot" },
-    { command: "subscribe", description: "Select the payment method" },
-    {
-      command: "check_validity",
-      description: "Checks the validity of your subscription",
-    },
-    { command: "support", description: "Contact support team" },
-  ],
-  {
-    scope: {
-      type: "all_private_chats",
-    },
-  }
-);
-
-bot.setMyCommands([],{
-  scope: {
-    type: "all_group_chats"
-  }
-})
-
 bot.onText(/\/support/, (message) => {
   bot
     .sendMessage(
