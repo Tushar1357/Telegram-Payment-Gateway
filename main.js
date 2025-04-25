@@ -336,16 +336,14 @@ bot.on("chat_join_request", async (request) => {
     const chatId = request.from.id;
     const groupId = request.chat.id;
     const constGroupId = -1002697858599;
-    console.log(request)
     if (groupId === constGroupId) {
       const result = await bot.getChatMember(process.env.CHATID, chatId);
-      console.log(result)
       if (result.status === "member") {
         bot.approveChatJoinRequest(groupId, chatId);
       } else {
         bot.declineChatJoinRequest(groupId, chatId);
         console.log(
-          `${result.user.id} - ${result.user.first_name} ${result.user.last_name}`
+          `${result.user.id} - ${result.user.first_name} ${result.user?.last_name}`
         );
       }
     }
