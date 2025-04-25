@@ -335,7 +335,7 @@ bot.on("chat_join_request", async (request) => {
   try {
     const chatId = request.from.id;
     const groupId = request.chat.id;
-    const constGroupId = -4608904469;
+    const constGroupId = -1002697858599;
     console.log(request)
     if (groupId === constGroupId) {
       const result = await bot.getChatMember(process.env.CHATID, chatId);
