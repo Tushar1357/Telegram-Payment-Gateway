@@ -43,6 +43,10 @@ const Wallets = sequelize.define("Wallets", {
   paymentChain: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  tokenSymbol: {
+    type: DataTypes.STRING,
+    allowNull: false
   }
 });
 

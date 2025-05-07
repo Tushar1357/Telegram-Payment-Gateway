@@ -14,6 +14,7 @@ const createInviteLink = require("./services/createInviteLink.js");
 const checkToleranceAmount = require("./services/checkToleranceamount.js");
 const getTgId = require("./services/getTgId.js");
 const sendMessage = require("./services/sendMessage.js");
+const chains = require("./configs/chains.js")
 
 const CHECK_BALANCE_INTERVAL = 15 * 1000;
 const BALANCE_SEND_INTERVAL = 10 * 60 * 1000;
@@ -61,8 +62,12 @@ bot.onText(/\/subscribe/, async (msg) => {
     parse_mode: "Markdown",
     reply_markup: {
       inline_keyboard: [
-        [{ text: "USDC (BSC)", callback_data: "bsc" }],
-        [{ text: "USDC (BASE)", callback_data: "base" }],
+        [{ text: "USDC (BSC)", callback_data: "usdc_bsc" }],
+        [{ text: "USDC (BASE)", callback_data: "usdc_base" }],
+        [{ text: "USDT (BSC)", callback_data: "usdt_bsc" }],
+        [{ text: "USDT (BASE)", callback_data: "usdt_base" }],
+
+
       ],
     },
   };
@@ -244,17 +249,19 @@ bot.on("message", async (message) => {
 bot.on("callback_query", async (query) => {
   try {
     const chatId = query.message.chat.id;
-    const choice = query.data;
+    const data = query.data; 
+    const [tokenSymbol, chainName] = data.split("_");
 
     await bot.answerCallbackQuery(query.id);
-    if (!["bsc", "base"].includes(choice)) {
-      await bot.sendMessage(
-        chatId,
-        "No chain selected for payment or Invalid chain."
-      );
+
+    const chainConfig = chains[chainName]?.[tokenSymbol];
+    if (!chainConfig) {
+      await bot.sendMessage(chatId, "Invalid payment method selected.");
       return;
     }
-    const chainLabel = choice === "bsc" ? "BSC" : "BASE";
+
+    const tokenLabel = tokenSymbol.toUpperCase();
+    const chainLabel = chainName === "bsc" ? "BSC" : "BASE";
 
     let wallet;
     try {
@@ -262,60 +269,34 @@ bot.on("callback_query", async (query) => {
         query.from.id,
         query.from.first_name,
         query.from.username,
-        choice
+        chainName,
+        tokenSymbol
       );
     } catch (err) {
       console.error("Wallet creation failed:", err);
-      return bot
-        .sendMessage(
-          chatId,
-          "⚠️ Failed to create wallet. Please try again later."
-        )
-        .catch((error) => console.log(error));
+      return bot.sendMessage(chatId, "⚠️ Failed to create wallet. Please try again later.");
     }
 
     const { status, address, createdAt } = wallet;
-
     const expiry = new Date(new Date(createdAt).getTime() + 30 * 60 * 1000);
 
+    const introText =
+      status === "changed_chain"
+        ? `Note: _You have changed the chain/token._\n\n`
+        : status === "old"
+        ? `Note: _You already have a pending payment of ${MIN_AMOUNT}$ on ${chainLabel} ${tokenLabel}._\n\n`
+        : `🔗 Generating a ${chainLabel} ${tokenLabel} wallet for you...\n`;
+
     if (status === "new") {
-      await bot.sendMessage(
-        chatId,
-        `🔗 Generating a ${chainLabel} USDC wallet for you...`
-      );
+      await bot.sendMessage(chatId, `🔗 Generating a ${chainLabel} ${tokenLabel} wallet for you...`);
       await new Promise((r) => setTimeout(r, 500));
-      await bot.sendMessage(
-        chatId,
-        `💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @Skelter10 or @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically. (Will roughly take 15-20 seconds.)\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
-          choice === "bsc" ? "Binance smart chain" : "Base Chain"
-        }). Sending from other networks may result in loss of funds.`,
-        {
-          parse_mode: "Markdown",
-        }
-      );
-    } else if (status === "changed_chain") {
-      await bot.sendMessage(
-        chatId,
-        `Note: _You have changed the chain from ${
-          choice === "base" ? "BSC" : "BASE"
-        } to ${choice.toUpperCase()}._\n\n💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @Skelter10 or @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically. (Will roughly take 15-20 seconds.)\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
-          choice === "bsc" ? "Binance smart chain" : "Base Chain"
-        }). Sending from other networks may result in loss of funds.`,
-        {
-          parse_mode: "Markdown",
-        }
-      );
-    } else if (status === "old") {
-      await bot.sendMessage(
-        chatId,
-        `Note: _You are already having a pending payment of 10$ on ${choice.toUpperCase()} chain. Please complete that or wait for 30 minutes to generate a new address._\n\n💰 USDC Amount: *${MIN_AMOUNT}*\n\n📥 Send only *USDC (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Your address will expire at ${expiry.toUTCString()}\n❗ If you pay late, please contact support at @Skelter10 or @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash or screenshot.\n- Your deposit will be detected automatically. (Will roughly take 15-20 seconds.)\n- Transaction fees must be covered by you.\n- Make sure the amount is *not less* than the required *${MIN_AMOUNT} USDC*.\n- Send only *(${chainLabel}) USDC* (${
-          choice === "bsc" ? "Binance smart chain" : "Base Chain"
-        }). Sending from other networks may result in loss of funds.`,
-        {
-          parse_mode: "Markdown",
-        }
-      );
     }
+
+    await bot.sendMessage(
+      chatId,
+      `${introText}💰 ${tokenLabel} Amount: *${MIN_AMOUNT}*\n\n📥 Send only *${tokenLabel} (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Address will expire at ${expiry.toUTCString()}\n❗ If you pay late, contact support @Skelter10 or @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash.\n- Deposit is detected automatically (~15-20 seconds).\n- Send only *${tokenLabel} (${chainLabel})*. Wrong networks may lead to loss of funds.`,
+      { parse_mode: "Markdown" }
+    );
 
     try {
       await bot.deleteMessage(query.message.chat.id, query.message.message_id);
@@ -324,12 +305,10 @@ bot.on("callback_query", async (query) => {
     }
   } catch (error) {
     console.error("Error in callback_query:", error);
-    bot.sendMessage(
-      query.message.chat.id,
-      "⚠️ Something went wrong. Please try again later."
-    );
+    bot.sendMessage(query.message.chat.id, "⚠️ Something went wrong. Please try again later.");
   }
 });
+
 
 bot.on("chat_join_request", async (request) => {
   try {

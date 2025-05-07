@@ -34,25 +34,19 @@ const checkBalance = async (bot) => {
           continue;
         }
         const createdAt = new Date(wallet.createdAt).getTime();
-        const time = createdAt + TIMEOUT;
+        const expiryTime = createdAt + TIMEOUT;
 
-        if (
-          time - Date.now() < REMINDER_TIME &&
-          time - Date.now() > REMINDER_TIME - 15 * 1000
-        ) {
+        const timeLeft = expiryTime - Date.now();
+        if (timeLeft < REMINDER_TIME && timeLeft > REMINDER_TIME - 15 * 1000) {
           bot
             .sendMessage(
               user.tgId,
-              `⏰ Reminder: You have 5 minutes left to complete your payment of ${MIN_AMOUNT} USDC (${wallet.paymentChain.toUpperCase()}). Please complete it soon or the address will expire.`
+              `⏰ Reminder: You have 5 minutes left to complete your payment of ${MIN_AMOUNT} ${wallet.tokenSymbol.toUpperCase()} (${wallet.paymentChain.toUpperCase()}). Please complete it soon or the address will expire.`
             )
-            .catch((error) =>
-              console.log(
-                "Error while sending 5 minute reminder. Error:",
-                error?.message
-              )
-            );
+            .catch((error) => console.log("Reminder error:", error?.message));
         }
-        if (time < Date.now()) {
+
+        if (expiryTime < Date.now()) {
           await Wallets.update(
             { status: "expired" },
             { where: { id: wallet.id } }
@@ -60,24 +54,28 @@ const checkBalance = async (bot) => {
           bot
             .sendMessage(
               user.tgId,
-              `Your payment time is over and the wallet address ${wallet.address} has expired. Kindly click on /subscribe to restart the process.`
+              `❌ Your payment time has expired. Wallet address \`${wallet.address}\` is no longer valid.\n\nPlease click /subscribe to generate a new one.`,
+              { parse_mode: "Markdown" }
             )
             .catch((error) =>
-              console.log(
-                "Error while sending expiry reminder. Error: ",
-                error?.message
-              )
+              console.log("Expiry message error:", error?.message)
             );
           continue;
         }
 
-        const tokenBalance = await chains[wallet.paymentChain].contract.methods
+        const chain =
+          chains?.[wallet.paymentChain]?.[wallet.tokenSymbol.toLowerCase()];
+        if (!chain || !chain.contract || !chain.decimals) {
+          console.log(
+            `Invalid chain/token config for ${wallet.paymentChain} / ${wallet.tokenSymbol}`
+          );
+          continue;
+        }
+
+        const tokenBalance = await chain.contract.methods
           .balanceOf(wallet.address)
           .call();
-        const tokenBalanceFormatted = formatUnits(
-          tokenBalance,
-          chains[wallet.paymentChain].decimals
-        );
+        const tokenBalanceFormatted = formatUnits(tokenBalance, chain.decimals);
 
         if (parseFloat(tokenBalanceFormatted) >= MIN_AMOUNT) {
           const result = await Wallets.update(

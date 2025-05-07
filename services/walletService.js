@@ -3,7 +3,7 @@ const User = require("../database/models/users/User.js");
 const Wallet = require("../database/models/wallets/Wallets.js");
 require("dotenv").config();
 
-const createWalletForUser = async (tgId, tgName, tgUserName, paymentChain) => {
+const createWalletForUser = async (tgId, tgName, tgUserName, paymentChain, tokenSymbol) => {
   try {
     let user = await User.findOne({ where: { tgId } });
 
@@ -16,39 +16,47 @@ const createWalletForUser = async (tgId, tgName, tgUserName, paymentChain) => {
       });
     }
 
-    if (!paymentChain) {
-      console.log("No payment chain");
+    if (!paymentChain || !tokenSymbol) {
+      console.log("Missing payment chain or token symbol.");
       return { address: "", createdAt: "" };
     }
 
     const existingWallet = await Wallet.findOne({
-      where: { userId: user.id, status: "unpaid" },
+      where: {
+        userId: user.id,
+        status: "unpaid",
+      },
       order: [["createdAt", "DESC"]],
     });
 
-    if (existingWallet) {
-      const walletAge =
-        Date.now() - new Date(existingWallet.createdAt).getTime();
-      const THIRTY_MINUTES = 30 * 60 * 1000;
+    const THIRTY_MINUTES = 30 * 60 * 1000;
 
-      if (existingWallet.paymentChain !== paymentChain) {
+    if (existingWallet) {
+      const walletAge = Date.now() - new Date(existingWallet.createdAt).getTime();
+
+      // Handle chain OR token change
+      if (
+        existingWallet.paymentChain !== paymentChain ||
+        existingWallet.tokenSymbol !== tokenSymbol
+      ) {
         await Wallet.update(
           {
             paymentChain,
+            tokenSymbol,
             createdAt: new Date(Date.now()),
           },
           {
-            where: {
-              id: existingWallet.id,
-            },
+            where: { id: existingWallet.id },
           }
         );
+
         return {
           status: "changed_chain",
           address: existingWallet.address,
           createdAt: new Date(Date.now()),
         };
       }
+
       if (walletAge < THIRTY_MINUTES) {
         return {
           status: "old",
@@ -65,6 +73,7 @@ const createWalletForUser = async (tgId, tgName, tgUserName, paymentChain) => {
 
     const { address, privateKey } = generateWallet();
     const { encryptedPrivateKey, iv } = encrypt(privateKey);
+
     const wallet = await Wallet.create({
       address,
       privateKey: encryptedPrivateKey,
@@ -72,6 +81,7 @@ const createWalletForUser = async (tgId, tgName, tgUserName, paymentChain) => {
       status: "unpaid",
       userId: user.id,
       paymentChain,
+      tokenSymbol,
     });
 
     return {
@@ -80,10 +90,9 @@ const createWalletForUser = async (tgId, tgName, tgUserName, paymentChain) => {
       createdAt: wallet.createdAt,
     };
   } catch (error) {
-    console.log(
-      `Error while creating wallet address. Error: ${error?.message}`
-    );
+    console.log(`Error while creating wallet address. Error: ${error?.message}`);
   }
 };
+
 
 module.exports = { createWalletForUser };

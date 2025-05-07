@@ -12,14 +12,9 @@ const chatId = process.env.CHATID;
 
 const checkToleranceAmount = async (tgId, bot) => {
   try {
-    const user = await User.findOne({
-      where: {
-        tgId,
-      },
-    });
-    if (!user) {
-      return "No user found with this telegram Id.";
-    }
+    const user = await User.findOne({ where: { tgId } });
+    if (!user) return "❌ No user found with this Telegram ID.";
+
     const wallets = await Wallets.findAll({
       where: {
         userId: user.id,
@@ -33,132 +28,96 @@ const checkToleranceAmount = async (tgId, bot) => {
     }
 
     for (const wallet of wallets) {
-      try {
-        const tokenBalance = await chains[wallet.paymentChain].contract.methods
-          .balanceOf(wallet.address)
-          .call();
-        const tokenBalanceFormatted = formatUnits(
-          tokenBalance,
-          chains[wallet.paymentChain].decimals
-        );
+      for (const tokenSymbol of ["usdc", "usdt"]) {
+        try {
+          const tokenConfig = chains?.[wallet.paymentChain]?.[tokenSymbol];
+          if (!tokenConfig) continue;
 
-        if (parseFloat(tokenBalanceFormatted) >= MIN_TOLERANCE) {
-          const result = await Wallets.update(
-            {
-              status: "paid",
-              balanceSent: false,
-            },
-            {
-              where: {
-                id: wallet.id,
-              },
-            }
+          const tokenBalance = await tokenConfig.contract.methods
+            .balanceOf(wallet.address)
+            .call();
+
+          const tokenBalanceFormatted = parseFloat(
+            formatUnits(tokenBalance, tokenConfig.decimals)
           );
 
-          const expirationTime = await updateSubscription(user);
-
-          if (!result) {
-            console.log(
-              "There was an error while updating the payment status."
+          if (tokenBalanceFormatted >= MIN_TOLERANCE) {
+            await Wallets.update(
+              {
+                status: "paid",
+                tokenSymbol: tokenSymbol.toUpperCase(),
+                balanceSent: false,
+              },
+              { where: { id: wallet.id } }
             );
-          }
 
-          if (!user.subscriptionStatus) {
+            const expirationTime = await updateSubscription(user);
+
             const channelLink = await bot.createChatInviteLink(chatId, {
               member_limit: 1,
               expire_date: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
             });
-            bot
-              .sendMessage(
+
+            const isNewSub = !user.subscriptionStatus;
+
+            if (isNewSub) {
+              await bot.sendMessage(
                 user.tgId,
-                `🎉 *Subscription Activated!*\n\n✅ You’ve successfully purchased your subscription.\n\n🔗 *Access the Channel:*\n[Click here to join](${
-                  channelLink.invite_link
-                })\n\n🕒 *Subscription Valid Till:*\n${new Date(
+                `🎉 *Subscription Activated!*\n\n✅ You’ve successfully purchased your subscription.\n\n🔗 *Access the Channel:*\n[Click here to join](${channelLink.invite_link})\n\n🕒 *Subscription Valid Till:*\n${new Date(
                   expirationTime
                 ).toUTCString()}\n\nThank you for subscribing! If you face any issues, feel free to reach out to @Skelter10 or @MrBean000.`,
                 {
                   parse_mode: "Markdown",
                   disable_web_page_preview: true,
                 }
-              )
-              .catch((error) =>
-                console.log(
-                  "Error while sending subscription activation message. Error",
-                  error?.message
-                )
               );
 
-            bot
-              .sendMessage(
+              await bot.sendMessage(
                 ADMIN_CHATID,
-                `🎉 *New Subscription Alert!*\n\n${user.tgName} just bought premium subscription for 1 month.`,
-                {
-                  parse_mode: "Markdown",
-                }
-              )
-              .catch((error) => console.log(error?.message));
-            bot
-              .sendMessage(
+                `🎉 *New Subscription Alert!*\n\n${user.tgName} subscribed using ${tokenSymbol.toUpperCase()} on ${wallet.paymentChain.toUpperCase()}.`,
+                { parse_mode: "Markdown" }
+              );
+
+              await bot.sendMessage(
                 ADMIN_CHATID_2,
-                `🎉 *New Subscription Alert!*\n\n${user.tgName} just bought premium subscription for 1 month.`,
-                {
-                  parse_mode: "Markdown",
-                }
-              )
-              .catch((error) => console.log(error?.message));
-          } else {
-            bot
-              .sendMessage(
+                `🎉 *New Subscription Alert!*\n\n${user.tgName} subscribed using ${tokenSymbol.toUpperCase()} on ${wallet.paymentChain.toUpperCase()}.`,
+                { parse_mode: "Markdown" }
+              );
+            } else {
+              await bot.sendMessage(
                 user.tgId,
-                `✅ Thanks for extending your subscription.\n\nYour subscription has been extended by 30 days.\n\n🕒 *Subscription Valid Till:*\n${new Date(
-                  expirationTime
-                ).toUTCString()}`,
-                {
-                  parse_mode: "Markdown",
-                }
-              )
-              .catch((error) =>
-                console.log(
-                  "Error while sending extending message. Error",
-                  error?.message
-                )
+                `✅ Thanks for extending your subscription.\n\nYour subscription has been extended by 30 days.\n\n🕒 *Valid Till:*\n${new Date(expirationTime).toUTCString()}`,
+                { parse_mode: "Markdown" }
               );
-            bot
-              .sendMessage(
+
+              await bot.sendMessage(
                 ADMIN_CHATID,
-                `🎉 *Renewal Alert!*\n\n${user.tgName} just renewed premium subscription for 1 month.`,
-                {
-                  parse_mode: "Markdown",
-                }
-              )
-              .catch((error) => console.log(error?.message));
-            bot
-              .sendMessage(
+                `🎉 *Renewal Alert!*\n\n${user.tgName} renewed using ${tokenSymbol.toUpperCase()} on ${wallet.paymentChain.toUpperCase()}.`,
+                { parse_mode: "Markdown" }
+              );
+
+              await bot.sendMessage(
                 ADMIN_CHATID_2,
-                `🎉 *Renewal Alert!*\n\n${user.tgName} just renewed premium subscription for 1 month.`,
-                {
-                  parse_mode: "Markdown",
-                }
-              )
-              .catch((error) => console.log(error?.message));
+                `🎉 *Renewal Alert!*\n\n${user.tgName} renewed using ${tokenSymbol.toUpperCase()} on ${wallet.paymentChain.toUpperCase()}.`,
+                { parse_mode: "Markdown" }
+              );
+            }
 
-
+            return `✅ Found tolerance amount (${tokenBalanceFormatted} ${tokenSymbol.toUpperCase()}) on ${wallet.address}. Subscription updated.`;
           }
-
-          return `Checked all addressess and found ${wallet.address} with min tolerance amount.`
+        } catch (error) {
+          console.log(
+            `❌ Error checking ${tokenSymbol.toUpperCase()} on ${wallet.paymentChain.toUpperCase()} for ${wallet.address}: ${error?.message}`
+          );
+          return "❌ Error occurred while checking wallet balances.";
         }
-      } catch (error) {
-        console.log(
-          `Error while checking expired address ${wallet.address}. Error: ${error?.message}`
-        );
-        return "Error while checking addresses."; 
       }
     }
 
-    return "No address found with minimum tolerance amount.";
+    return "🔍 No wallet found with minimum tolerance amount in any token.";
   } catch (error) {
-    console.log("Error while checking expired addresses", error?.message);
-    return "Error while checking addresses.";
+    console.log("❌ Error while checking tolerance amount:", error?.message);
+    return "❌ An error occurred while checking tolerance amount.";
   }
 };
 
