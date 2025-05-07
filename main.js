@@ -284,7 +284,7 @@ bot.on("callback_query", async (query) => {
       status === "changed_chain"
         ? `Note: _You have changed the chain/token._\n\n`
         : status === "old"
-        ? `Note: _You already have a pending payment of ${MIN_AMOUNT}$ on ${chainLabel} ${tokenLabel}._\n\n`: null;
+        ? `Note: _You already have a pending payment of ${MIN_AMOUNT}$ on ${chainLabel} ${tokenLabel}._\n\n`: "";
 
     if (status === "new") {
       await bot.sendMessage(chatId, `🔗 Generating a ${chainLabel} ${tokenLabel} wallet for you...`);
