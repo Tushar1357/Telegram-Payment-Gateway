@@ -34,7 +34,7 @@ bot.onText(/\/start/, async (msg) => {
   const message = `
 👋 *Welcome to Mr. S Premium!*
 
-To access our private channel, you’ll need to purchase a subscription using *USDC on BSC (BEP-20) or BASE (Base Chain)*.
+To access our private channel, you’ll need to purchase a subscription using *USDC or USDT on BSC (BEP-20) or BASE (Base Chain)*.
 
 💳 *Steps to Subscribe:*
 1. A unique wallet address will be generated for your payment.
