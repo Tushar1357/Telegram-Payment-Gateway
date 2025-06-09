@@ -45,7 +45,7 @@ To access our private channel, you’ll need to purchase a subscription using *U
 
 To get started, just click /subscribe
 
-Need help? Contact @Skelter10 or @MrBean000.
+Need help? Contact --- or ---.
 `;
 
   await bot.sendMessage(chatId, message, {
@@ -293,7 +293,7 @@ bot.on("callback_query", async (query) => {
 
     await bot.sendMessage(
       chatId,
-      `${introText}💰 ${tokenLabel} Amount: *${MIN_AMOUNT}*\n\n📥 Send only *${tokenLabel} (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Address will expire at ${expiry.toUTCString()}\n❗ If you pay late, contact support @Skelter10 or @MrBean000.\n\n✅ *Important Notes:*\n- No need to send transaction hash.\n- Deposit is detected automatically (~15-20 seconds).\n- Send only *${tokenLabel} (${chainLabel})*. Wrong networks may lead to loss of funds.`,
+      `${introText}💰 ${tokenLabel} Amount: *${MIN_AMOUNT}*\n\n📥 Send only *${tokenLabel} (${chainLabel})* to:\n\`${address}\`\n\n⏳ You have 30 minutes to complete the payment. Address will expire at ${expiry.toUTCString()}\n❗ If you pay late, contact support --- or ---.\n\n✅ *Important Notes:*\n- No need to send transaction hash.\n- Deposit is detected automatically (~15-20 seconds).\n- Send only *${tokenLabel} (${chainLabel})*. Wrong networks may lead to loss of funds.`,
       { parse_mode: "Markdown" }
     );
 
@@ -313,7 +313,7 @@ bot.on("chat_join_request", async (request) => {
   try {
     const chatId = request.from.id;
     const groupId = request.chat.id;
-    const constGroupId = -1002697858599;
+    const constGroupId = 123; // enter the actual group id
     if (groupId === constGroupId) {
       const result = await bot.getChatMember(process.env.CHATID, chatId);
       if (result.status === "member") {
@@ -334,7 +334,7 @@ bot.onText(/\/support/, (message) => {
   bot
     .sendMessage(
       message.chat.id,
-      "Please contact support at @Skelter10 or @MrBean000."
+      "Please contact support at --- or ---."
     )
     .catch((error) =>
       console.log("Error while sending support message", error?.message)
